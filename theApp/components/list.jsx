@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, TouchableOpacity, Text, Image, StyleSheet } from "react-native";
 import React from "react";
 import { useRouter } from "expo-router";
 
@@ -7,25 +7,34 @@ const List = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.item} onPress={() => router.push("/")}>
+      {/* Home */}
+      <TouchableOpacity style={styles.tabItem} onPress={() => router.push("/")}>
         <Image source={require("../assets/home.png")} style={styles.icon} />
         <Text style={styles.label}>Home</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.item} onPress={() => router.push("/workouts")}>
+      {/* Workouts */}
+      <TouchableOpacity style={styles.tabItem} onPress={() => router.push("/workouts")}>
         <Image source={require("../assets/dumbbell-horizontal.png")} style={styles.icon} />
         <Text style={styles.label}>Workouts</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.item} onPress={() => router.push("/nutrition")}>
+      {/* Nutrition */}
+      <TouchableOpacity style={styles.tabItem} onPress={() => router.push("/nutrition")}>
         <Image source={require("../assets/salad.png")} style={styles.icon} />
         <Text style={styles.label}>Nutrition</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.item} onPress={() => router.push("/profile")}>
+        {/* BMI */}
+      <TouchableOpacity style={styles.tabItem} onPress={() => router.push("/bmi")}>
+        <Image source={require("../assets/bmi.png")} style={styles.icon} />
+        <Text style={styles.label}>BMI</Text>
+      </TouchableOpacity>
+      {/* Profile */}
+      <TouchableOpacity style={styles.tabItem} onPress={() => router.push("/profile")}>
         <Image source={require("../assets/user.png")} style={styles.icon} />
         <Text style={styles.label}>Profile</Text>
       </TouchableOpacity>
+
     </View>
   );
 };
@@ -37,23 +46,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#001109",
-    paddingVertical: 14,
+    backgroundColor: "#0a0a0a",
     borderTopWidth: 1,
-    borderTopColor: "#0f3020",
+    borderTopColor: "#00ff88",
+    paddingVertical: 10,
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
   },
-  item: {
+  tabItem: {
     alignItems: "center",
   },
   icon: {
-    width: 26,
-    height: 26,
-    marginBottom: 4,
+    width: 24,
+    height: 24,
     tintColor: "#00ff88",
   },
   label: {
-    color: "#d8ffd8",
+    color: "#bfffd6",
     fontSize: 12,
-    fontWeight: "600",
+    marginTop: 4,
   },
 });
