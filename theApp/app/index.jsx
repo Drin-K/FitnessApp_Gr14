@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-
   ScrollView,
   StatusBar,
   TouchableOpacity,
@@ -20,7 +19,7 @@ const indexx = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 }]}
+      style={[styles.container]}
     >
       <StatusBar barStyle="light-content" backgroundColor="#000" translucent={false} />
 
@@ -29,7 +28,7 @@ const indexx = () => {
           {/* Top Header */}
           <View style={styles.topContainer}>
             <Text style={styles.topTitle}>ILLYRIAN GYM</Text>
-            <Text style={styles.topSubtitle}>Train Hard. Stay Consistent. Conquer Goals.</Text>
+            {/* <Text style={styles.topSubtitle}>Train Hard. Stay Consistent. Conquer Goals.</Text> */}
           </View>
 
           {/* Home Section */}
@@ -93,17 +92,19 @@ const styles = StyleSheet.create({
   },
   topTitle: {
     color: "#00ff88",
-    fontSize: 28,
+    fontSize: 35,
     fontWeight: "900",
     letterSpacing: 1.5,
     textTransform: "uppercase",
     textShadowColor: "#00ff88",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
+    marginBottom:-20,
+    marginTop:10
   },
   topSubtitle: {
     color: "#b7ffcc",
-    fontSize: 13,
+    fontSize: 10,
     marginTop: 4,
     letterSpacing: 0.5,
     textAlign: "center",
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
   },
   beFit: {
     color: "#bfffd6",
-    fontSize: 34,
+    fontSize: 22,
     fontWeight: "900",
     letterSpacing: 1.2,
   },
@@ -128,10 +129,10 @@ const styles = StyleSheet.create({
 
   // --- Hero section ---
   hero: {
-    marginTop: 12,
+    marginTop: -30,
+    marginRight:30,
     width: "100%",
     alignItems: "center",
-    backgroundColor: "#06140f",
     borderRadius: 14,
     paddingVertical: 18,
     paddingHorizontal: 14,
@@ -142,9 +143,9 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   runner: {
-    width: "300%",
-    height: 350,
-    marginBottom: 8,
+    width: "400%",
+    height: 480,
+    marginBottom: -70,
   },
   heroText: {
     color: "#cdefd8",
