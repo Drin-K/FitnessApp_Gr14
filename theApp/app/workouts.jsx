@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, FlatList, StatusBar, Platform } from "react-native";
+import { View, Text, StyleSheet, FlatList, StatusBar, Platform, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import WorkoutCard from "../components/WorkoutCard";
@@ -8,31 +8,45 @@ import List from "../components/list";
 const workouts = [
   {
     id: "1",
-    title: "Full Body Blast",
+    title: "Chest",
     duration: "45 min",
-    functionality: "Targets all major muscle groups with compound movements.",
-    image: require("../assets/workout1.webp"),
+    functionality: "Build upper body strength with presses, flies, and push variations.",
+    image: require("../assets/images/workout1.jpg"),
   },
   {
     id: "2",
-    title: "Core Crusher",
-    duration: "30 min",
-    functionality: "Strengthen your abs and improve core stability.",
-    // image: require("../assets/workout2.jpg"),
+    title: "Back",
+    duration: "40 min",
+    functionality: "Enhance posture and pulling strength with rows and pull-ups.",
+    image: require("../assets/images/workout2.jpg"),
   },
   {
     id: "3",
-    title: "Cardio Burn",
-    duration: "40 min",
-    functionality: "High-intensity interval training for endurance.",
-    // image: require("../assets/workout3.jpg"),
+    title: "Biceps",
+    duration: "30 min",
+    functionality: "Tone and grow your arms with curls and isolation movements.",
+    image: require("../assets/images/workout3.webp"),
   },
   {
     id: "4",
-    title: "Leg Power",
+    title: "Triceps",
+    duration: "30 min",
+    functionality: "Strengthen your arms with dips, extensions, and close-grip presses.",
+    image: require("../assets/images/workout4.webp"),
+  },
+  {
+    id: "5",
+    title: "Legs",
     duration: "50 min",
-    functionality: "Build explosive strength in your lower body.",
-    // image: require("../assets/workout4.jpg"),
+    functionality: "Develop explosive power with squats, lunges, and leg presses.",
+    image: require("../assets/images/workout5.webp"),
+  },
+  {
+    id: "6",
+    title: "Shoulders",
+    duration: "35 min",
+    functionality: "Build broad and stable shoulders with raises and presses.",
+    image: require("../assets/images/workout6.webp"),
   },
 ];
 
@@ -52,12 +66,17 @@ const Workouts = () => {
           data={workouts}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <WorkoutCard
-              title={item.title}
-              duration={item.duration}
-              functionality={item.functionality}
-              image={item.image}
-            />
+            <View style={{ marginBottom: 16 }}>
+              <WorkoutCard
+                title={item.title}
+                duration={item.duration}
+                functionality={item.functionality}
+                image={item.image}
+              />
+              <TouchableOpacity style={styles.button}>
+                <Text style={styles.buttonText}>See Workout</Text>
+              </TouchableOpacity>
+            </View>
           )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: 16 }}
@@ -92,5 +111,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#00ff88",
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#000",
+    fontWeight: "700",
+    fontSize: 16,
   },
 });
