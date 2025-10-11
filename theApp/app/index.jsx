@@ -151,6 +151,7 @@ const styles = StyleSheet.create({
     color: "#cdefd8",
     fontSize: 15,
     marginBottom: 10,
+    marginLeft:15,
     textAlign: "center",
   },
 
@@ -160,6 +161,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     width: "100%",
     justifyContent: "center",
+    marginLeft:15
   },
   primaryBtn: {
     backgroundColor: "#06d68a",
