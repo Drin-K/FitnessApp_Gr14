@@ -10,7 +10,7 @@ const Nutrition = () => {
   const router = useRouter();
 
   const dietGoals = [
-    { img: require("../assets/weightloss.png"), name: "Weight Loss", route: "/nutrition/weightloss" },
+    { img: require("../assets/weightloss.png"), name: "Weight Loss", route: "/weightloss" },
     { img: require("../assets/muscle.png"), name: "Muscle Gain", route: "/nutrition/muscle" },
     { img: require("../assets/energy.png"), name: "Daily Energy", route: "/nutrition/energy" },
   ];
@@ -49,8 +49,6 @@ const Nutrition = () => {
               ))}
             </View>
           </View>
-
-          {/* Recommended Foods */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Recommended Foods</Text>
             <View style={styles.cardRow}>
@@ -59,8 +57,6 @@ const Nutrition = () => {
               ))}
             </View>
           </View>
-
-          {/* Tips */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Nutrition Tips</Text>
             <LinearGradient colors={["#002b1a", "#001a10"]} style={styles.tips}>

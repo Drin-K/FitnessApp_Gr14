@@ -18,11 +18,11 @@ const styles = StyleSheet.create({
   item: {
     width: "31%",
     backgroundColor: "#0e0e0e",
-    borderRadius: 16,
     alignItems: "center",
     padding: 10,
     borderWidth: 1,
     borderColor: "#004d2b",
+    borderRadius: 16,
     shadowColor: "#00ff88",
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     marginBottom: 8,
+    borderRadius: 10,
   },
   name: {
     color: "#bfffd6",
