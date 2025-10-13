@@ -54,7 +54,6 @@ const Index = () => {
           <View style={[
             styles.hero, 
             { 
-              backgroundColor: colors.card,
               shadowColor: colors.shadow,
             }
           ]}>
