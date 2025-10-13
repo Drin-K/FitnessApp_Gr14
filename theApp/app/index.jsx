@@ -7,52 +7,81 @@ import {
   StatusBar,
   TouchableOpacity,
   Image,
-  Platform,
 } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import List from "../components/list";
 
-const indexx = () => {
+const Index = () => {
   const router = useRouter();
+  const { colors, toggleTheme, isDarkMode } = useTheme();
 
   return (
-    <SafeAreaView
-      style={[styles.container]}
-    >
-      <StatusBar barStyle="light-content" backgroundColor="#000" translucent={false} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar 
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={colors.background}
+        translucent={false} 
+      />
 
-      <View style={styles.background}>
+      <View style={[styles.background, { backgroundColor: colors.background }]}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          
+          {/* 🔘 Theme Toggle Button
+          <TouchableOpacity
+            style={[styles.themeButton, { borderColor: colors.primary }]}
+            onPress={toggleTheme}
+          >
+          </TouchableOpacity> */}
+
           {/* Top Header */}
           <View style={styles.topContainer}>
-            <Text style={styles.topTitle}>ILLYRIAN GYM</Text>
-            {/* <Text style={styles.topSubtitle}>Train Hard. Stay Consistent. Conquer Goals.</Text> */}
+            <Text style={[styles.topTitle, { color: colors.primary }]}>
+              ILLYRIAN GYM
+            </Text>
           </View>
 
           {/* Home Section */}
           <View style={styles.headerWrap}>
-            <Text style={styles.beFit}>BE FIT</Text>
-            <Text style={styles.subtitle}>Welcome back — little steps, big changes.</Text>
+            <Text style={[styles.beFit, { color: colors.text }]}>BE FIT</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Welcome back — little steps, big changes.
+            </Text>
           </View>
 
-          {/* Hero Image */}
-          <View style={styles.hero}>
+          {/* Hero Section */}
+          <View style={[
+            styles.hero, 
+            { 
+              backgroundColor: colors.card,
+              shadowColor: colors.shadow,
+            }
+          ]}>
             <Image
               source={require("../assets/running.png")}
               style={styles.runner}
               resizeMode="contain"
             />
-            <Text style={styles.heroText}>Start small. Stay consistent.</Text>
+            <Text style={[styles.heroText, { color: colors.text }]}>
+              Start small. Stay consistent.
+            </Text>
 
             <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.primaryBtn} onPress={() => router.push("/workouts")}>
+              <TouchableOpacity 
+                style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+                onPress={() => router.push("/workouts")}
+              >
                 <Text style={styles.primaryText}>Start Workout</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.ghostBtn} onPress={() => router.push("/nutrition")}>
-                <Text style={styles.ghostText}>View Meal Plan</Text>
+              <TouchableOpacity 
+                style={[styles.ghostBtn, { borderColor: colors.border }]}
+                onPress={() => router.push("/nutrition")}
+              >
+                <Text style={[styles.ghostText, { color: colors.text }]}>
+                  View Meal Plan
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -67,16 +96,14 @@ const indexx = () => {
   );
 };
 
-export default indexx;
+export default Index;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
   },
   background: {
     flex: 1,
-    backgroundColor: "#000",
   },
   scroll: {
     alignItems: "center",
@@ -84,30 +111,36 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
 
-  // --- Header ---
+  // Theme Toggle Button
+  themeButton: {
+    alignSelf: "flex-end",
+    borderWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+    marginRight: 10,
+  },
+  themeText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  // Header
   topContainer: {
     alignItems: "center",
     marginBottom: 25,
     paddingTop: 10,
   },
   topTitle: {
-    color: "#00ff88",
     fontSize: 35,
     fontWeight: "900",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    textShadowColor: "#00ff88",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
-    marginBottom:-20,
-    marginTop:10
-  },
-  topSubtitle: {
-    color: "#b7ffcc",
-    fontSize: 10,
-    marginTop: 4,
-    letterSpacing: 0.5,
-    textAlign: "center",
+    marginBottom: -20,
+    marginTop: 10
   },
 
   headerWrap: {
@@ -115,28 +148,25 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   beFit: {
-    color: "#bfffd6",
     fontSize: 22,
     fontWeight: "900",
     letterSpacing: 1.2,
   },
   subtitle: {
-    color: "#9fbfaa",
     fontSize: 13,
     marginTop: 6,
     textAlign: "center",
   },
 
-  // --- Hero section ---
+  // Hero Section
   hero: {
     marginTop: -30,
-    marginRight:30,
+    marginRight: 30,
     width: "100%",
     alignItems: "center",
     borderRadius: 14,
     paddingVertical: 18,
     paddingHorizontal: 14,
-    shadowColor: "#00ff7f",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 14,
@@ -148,40 +178,37 @@ const styles = StyleSheet.create({
     marginBottom: -70,
   },
   heroText: {
-    color: "#cdefd8",
     fontSize: 15,
     marginBottom: 10,
-    marginLeft:15,
+    marginLeft: 15,
     textAlign: "center",
   },
 
-  // --- Buttons ---
+  // Buttons
   actionRow: {
     flexDirection: "row",
     marginTop: 6,
     width: "100%",
     justifyContent: "center",
-    marginLeft:15
+    marginLeft: 15
   },
   primaryBtn: {
-    backgroundColor: "#06d68a",
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: 12,
     marginRight: 10,
   },
   primaryText: {
-    color: "#02120a",
+    color: "#fff",
     fontWeight: "800",
   },
   ghostBtn: {
     borderWidth: 1,
-    borderColor: "#0c3f32",
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 12,
   },
   ghostText: {
-    color: "#bfead0",
+    fontWeight: "600",
   },
 });
