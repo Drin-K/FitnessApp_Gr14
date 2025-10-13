@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  Alert
+  Alert,
+  ScrollView
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -133,6 +134,7 @@ const Workouts = () => {
         }
       ]}
     >
+    <ScrollView contentContainerStyle={styles.scroll}>
       <StatusBar 
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
@@ -295,7 +297,8 @@ const Workouts = () => {
           </View>
         )}
       </View>
-      <List onNavigate={(p) => router.push(p)} />
+      </ScrollView>
+       <List onNavigate={(p) => router.push(p)} />
     </SafeAreaView>
   );
 };
@@ -307,8 +310,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: { 
-    flex: 1, 
     paddingHorizontal: 16 
+  },
+   scroll: { 
+    padding: 20 
   },
   header: { 
     fontSize: 28, 

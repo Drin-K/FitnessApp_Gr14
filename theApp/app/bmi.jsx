@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import List from "../components/list";
-
+import { ScrollView } from "react-native";
 const BMI = () => {
   const [gender, setGender] = useState(null);
   const [height, setHeight] = useState(167);
@@ -29,6 +29,7 @@ const BMI = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
       <Text style={styles.title}>BMI Calculator</Text>
 
       {/* Selektimi i Gjinise */}
@@ -95,8 +96,8 @@ const BMI = () => {
       <TouchableOpacity style={styles.button}>
         <Text style={styles.buttonText}>Calculate BMI</Text>
       </TouchableOpacity>
-
-      <List />
+      </ScrollView>
+      <List onNavigate={(p) => router.push(p)} />
     </SafeAreaView>
   );
 };
@@ -108,6 +109,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
+  },
+  container: { flex: 1, backgroundColor: "#000" },
+    content: { 
+    flex: 1, 
+    paddingHorizontal: 16 
+  },
+  scroll: { 
+    padding: 20 
   },
   title: {
     color: "#fff",

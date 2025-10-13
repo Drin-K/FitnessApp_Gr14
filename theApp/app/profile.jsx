@@ -8,6 +8,8 @@ import List from "../components/list";
 const Settings = () => {
   return (
     <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={styles.content}>
       <LinearGradient colors={["#0a0a0a", "#001a10", "#000"]} style={styles.bg}>
         <ScrollView contentContainerStyle={styles.scroll}>
           {/* Profile Section */}
@@ -42,7 +44,9 @@ const Settings = () => {
           </TouchableOpacity>
         </ScrollView>
       </LinearGradient>
-       <List />
+      </View>
+      </ScrollView>
+      <List onNavigate={(p) => router.push(p)} />
     </SafeAreaView>
   );
 };
@@ -62,6 +66,13 @@ export default Settings;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
+    content: { 
+    flex: 1, 
+    paddingHorizontal: 16 
+  },
+  scroll: { 
+    padding: 20 
+  },
   bg: { flex: 1 },
   scroll: { padding: 20 },
   profileContainer: {
