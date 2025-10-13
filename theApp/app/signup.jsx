@@ -6,12 +6,12 @@ import {
   ScrollView,
   StatusBar,
   TouchableOpacity,
-  TextInput,
   Platform,
   KeyboardAvoidingView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import InputField from "../components/InputField"; // Adjust path as needed
 
 const Signup = () => {
   const router = useRouter();
@@ -65,57 +65,44 @@ const Signup = () => {
 
           {/* Signup Form */}
           <View style={styles.formContainer}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your full name"
-                placeholderTextColor="#666"
-                value={formData.fullName}
-                onChangeText={(text) => updateFormData("fullName", text)}
-                autoCapitalize="words"
-              />
-            </View>
+            <InputField
+              label="Full Name"
+              placeholder="Enter your full name"
+              value={formData.fullName}
+              onChangeText={(text) => updateFormData("fullName", text)}
+              autoCapitalize="words"
+              autoComplete="name"
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor="#666"
-                value={formData.email}
-                onChangeText={(text) => updateFormData("email", text)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </View>
+            <InputField
+              label="Email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChangeText={(text) => updateFormData("email", text)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Create a password"
-                placeholderTextColor="#666"
-                value={formData.password}
-                onChangeText={(text) => updateFormData("password", text)}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
+            <InputField
+              label="Password"
+              placeholder="Create a password"
+              value={formData.password}
+              onChangeText={(text) => updateFormData("password", text)}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password-new"
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm your password"
-                placeholderTextColor="#666"
-                value={formData.confirmPassword}
-                onChangeText={(text) => updateFormData("confirmPassword", text)}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
+            <InputField
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChangeText={(text) => updateFormData("confirmPassword", text)}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password-new"
+            />
 
             {/* Signup Button */}
             <TouchableOpacity 
@@ -211,27 +198,6 @@ const styles = StyleSheet.create({
   formContainer: {
     width: "100%",
     marginTop: 20,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    color: "#bfffd6",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-    letterSpacing: 0.5,
-  },
-  input: {
-    backgroundColor: "#1a1a1a",
-    borderWidth: 1,
-    borderColor: "#333",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
   },
   
   // Signup Button
