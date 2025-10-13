@@ -15,27 +15,31 @@ import List from "../components/list";
 
 const Index = () => {
   const router = useRouter();
-  const { colors, toggleTheme, isDarkMode } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar 
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
-        translucent={false} 
       />
 
-      <View style={[styles.background, { backgroundColor: colors.background }]}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <TouchableOpacity 
+        style={[styles.loginButton, { backgroundColor: colors.primary }]}
+        onPress={() => router.push("/login")}
+      >
+        <Text style={styles.loginText}>Login</Text>
+      </TouchableOpacity>
 
-          {/* Top Header */}
+      <View style={styles.background}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          
           <View style={styles.topContainer}>
             <Text style={[styles.topTitle, { color: colors.primary }]}>
               ILLYRIAN GYM
             </Text>
           </View>
 
-          {/* Home Section */}
           <View style={styles.headerWrap}>
             <Text style={[styles.beFit, { color: colors.text }]}>BE FIT</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -43,13 +47,7 @@ const Index = () => {
             </Text>
           </View>
 
-          {/* Hero Section */}
-          <View style={[
-            styles.hero, 
-            { 
-              shadowColor: colors.shadow,
-            }
-          ]}>
+          <View style={[styles.hero, { shadowColor: colors.shadow }]}>
             <Image
               source={require("../assets/running.png")}
               style={styles.runner}
@@ -78,10 +76,9 @@ const Index = () => {
             </View>
           </View>
 
-          <View style={{ height: 160 }} /> {/* Spacer so footer doesn't overlap */}
+          <View style={{ height: 160 }} />
         </ScrollView>
 
-        {/* Bottom navigation */}
         <List onNavigate={(p) => router.push(p)} />
       </View>
     </SafeAreaView>
@@ -102,23 +99,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 20,
   },
-
-  // Theme Toggle Button
-  themeButton: {
-    alignSelf: "flex-end",
-    borderWidth: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    marginRight: 10,
+  loginButton: {
+    position: "absolute",
+    top: 20,
+    left: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    zIndex: 1000,
   },
-  themeText: {
-    fontSize: 13,
+  loginText: {
+    color: "#fff",
+    fontSize: 16,
     fontWeight: "600",
   },
-
-  // Header
   topContainer: {
     alignItems: "center",
     marginBottom: 25,
@@ -129,12 +123,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-    marginBottom: -20,
-    marginTop: 10
   },
-
   headerWrap: {
     alignItems: "center",
     marginBottom: 8,
@@ -149,11 +138,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: "center",
   },
-
-  // Hero Section
   hero: {
-    marginTop: -30,
-    marginRight: 30,
     width: "100%",
     alignItems: "center",
     borderRadius: 14,
@@ -163,26 +148,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 14,
     elevation: 6,
+    marginTop: 10,
   },
   runner: {
-    width: "400%",
-    height: 480,
-    marginBottom: -70,
+    width: "100%",
+    height: 300,
+    marginBottom: 10,
   },
   heroText: {
     fontSize: 15,
     marginBottom: 10,
-    marginLeft: 15,
     textAlign: "center",
   },
-
-  // Buttons
   actionRow: {
     flexDirection: "row",
     marginTop: 6,
     width: "100%",
     justifyContent: "center",
-    marginLeft: 15
   },
   primaryBtn: {
     paddingVertical: 12,
