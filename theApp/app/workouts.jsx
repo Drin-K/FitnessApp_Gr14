@@ -8,10 +8,12 @@ import {
   Platform,
   TouchableOpacity,
   TextInput,
-  Image
+  Image,
+  Alert
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useTheme } from "../context/ThemeContext";
 import WorkoutCard from "../components/WorkoutCard";
 import * as ImagePicker from "expo-image-picker";
 import List from "../components/list";
@@ -70,6 +72,7 @@ const initialWorkouts = [
 
 const Workouts = () => {
   const router = useRouter();
+  const { colors, isDarkMode } = useTheme();
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState("Workouts");
 
@@ -97,52 +100,65 @@ const Workouts = () => {
       setImage(result.assets[0].uri);
     }
   };
-  // 👇 changed: add new custom workout dynamically
+
   const handleAddCustom = () => {
-    if (!customTitle.trim() || !customRoutine.trim()) return alert("Please fill all fields.");
+    if (!customTitle.trim() || !customRoutine.trim()) return Alert.alert("Error", "Please fill all fields.");
 
     const newWorkout = {
       id: (workouts.length + 1).toString(),
       title: customTitle,
       duration: customDuration || "30 min",
       functionality: customDescription,
-      image: image ? { uri: image }: "",
+      image: image ? { uri: image } : require("../assets/images/workout1.jpg"), // fallback image
       routine: customRoutine.split("\n").filter((r) => r.trim() !== ""),
-
     };
 
-    setWorkouts([...workouts, newWorkout]); // shton dinamikisht
+    setWorkouts([...workouts, newWorkout]);
     setCustomTitle("");
     setCustomDuration("");
     setCustomRoutine("");
     setCustomDescription("");
     setImage(null);
-    setActiveTab("Workouts"); // dinamikisht e shton ne list
-    return alert("✅ Workout added successfuly");
+    setActiveTab("Workouts");
+    Alert.alert("Success", "✅ Workout added successfully");
   };
 
   return (
     <SafeAreaView
-      style={[styles.container, { paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 }]}
+      style={[
+        styles.container, 
+        { 
+          backgroundColor: colors.background,
+          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 
+        }
+      ]}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#000" translucent={false} />
+      <StatusBar 
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={colors.background}
+        translucent={false} 
+      />
       <View style={styles.content}>
         {/* Header */}
-        <Text style={styles.header}>Plans</Text>
+        <Text style={[styles.header, { color: colors.primary }]}>Plans</Text>
 
         {/* Toggle Switch */}
-        <View style={styles.toggleContainer}>
+        <View style={[
+          styles.toggleContainer, 
+          { backgroundColor: colors.card }
+        ]}>
           <TouchableOpacity
             style={[
               styles.toggleButton,
-              activeTab === "Workouts" && styles.toggleActive,
+              activeTab === "Workouts" && [styles.toggleActive, { backgroundColor: colors.primary }]
             ]}
             onPress={() => setActiveTab("Workouts")}
           >
             <Text
               style={[
                 styles.toggleText,
-                activeTab === "Workouts" && styles.toggleTextActive,
+                { color: colors.text },
+                activeTab === "Workouts" && styles.toggleTextActive
               ]}
             >
               Workouts
@@ -152,14 +168,15 @@ const Workouts = () => {
           <TouchableOpacity
             style={[
               styles.toggleButton,
-              activeTab === "Custom" && styles.toggleActive,
+              activeTab === "Custom" && [styles.toggleActive, { backgroundColor: colors.primary }]
             ]}
             onPress={() => setActiveTab("Custom")}
           >
             <Text
               style={[
                 styles.toggleText,
-                activeTab === "Custom" && styles.toggleTextActive,
+                { color: colors.text },
+                activeTab === "Custom" && styles.toggleTextActive
               ]}
             >
               Custom
@@ -181,7 +198,7 @@ const Workouts = () => {
                   image={item.image}
                 />
                 <TouchableOpacity
-                  style={styles.button}
+                  style={[styles.button, { backgroundColor: colors.primary }]}
                   onPress={() => toggleExpand(item.id)}
                 >
                   <Text style={styles.buttonText}>
@@ -190,10 +207,12 @@ const Workouts = () => {
                 </TouchableOpacity>
 
                 {expandedId === item.id && (
-                  <View style={styles.routineContainer}>
-                    <Text style={styles.routineTitle}>Workout Routine</Text>
+                  <View style={[styles.routineContainer, { backgroundColor: colors.card }]}>
+                    <Text style={[styles.routineTitle, { color: colors.primary }]}>
+                      Workout Routine
+                    </Text>
                     {item.routine.map((routine, index) => (
-                      <Text key={index} style={styles.routineText}>
+                      <Text key={index} style={[styles.routineText, { color: colors.textSecondary }]}>
                         • {routine}
                       </Text>
                     ))}
@@ -206,46 +225,71 @@ const Workouts = () => {
           />
         ) : (
           // Custom Workout Section
-          <View style={styles.customContainer}>
-            <Text style={styles.customTitle}>Create Custom Workout</Text>
+          <View style={[styles.customContainer, { backgroundColor: colors.card }]}>
+            <Text style={[styles.customTitle, { color: colors.primary }]}>
+              Create Custom Workout
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: colors.surface || '#222', 
+                color: colors.text,
+                borderColor: colors.border 
+              }]}
               placeholder="Workout Title"
-              placeholderTextColor="#666"
+              placeholderTextColor={colors.textSecondary}
               value={customTitle}
               onChangeText={setCustomTitle}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: colors.surface || '#222', 
+                color: colors.text,
+                borderColor: colors.border 
+              }]}
               placeholder="Duration (e.g. 30 min)"
-              placeholderTextColor="#666"
+              placeholderTextColor={colors.textSecondary}
               value={customDuration}
               onChangeText={setCustomDuration}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: colors.surface || '#222', 
+                color: colors.text,
+                borderColor: colors.border 
+              }]}
               placeholder="Description"
-              placeholderTextColor="#666"
+              placeholderTextColor={colors.textSecondary}
               value={customDescription}
               onChangeText={setCustomDescription}
             />
             <TextInput
-              style={[styles.input, { height: 100 }]}
+              style={[styles.input, { 
+                height: 100, 
+                backgroundColor: colors.surface || '#222', 
+                color: colors.text,
+                borderColor: colors.border 
+              }]}
               placeholder="Workout Routine (one exercise per line)"
-              placeholderTextColor="#666"
+              placeholderTextColor={colors.textSecondary}
               value={customRoutine}
               multiline
               onChangeText={setCustomRoutine}
             />
-             <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-          <Text style={styles.addButtonText}>
-            {image ? "Change Photo" : "Upload Photo"}
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.uploadButton, { backgroundColor: colors.primary }]} 
+              onPress={pickImage}
+            >
+              <Text style={styles.addButtonText}>
+                {image ? "Change Photo" : "Upload Photo"}
+              </Text>
+            </TouchableOpacity>
 
-        {image && <Image source={{ uri: image }} style={styles.preview} />}
+            {image && <Image source={{ uri: image }} style={styles.preview} />}
 
-            <TouchableOpacity style={styles.addButton} onPress={handleAddCustom}>
+            <TouchableOpacity 
+              style={[styles.addButton, { backgroundColor: colors.primary }]} 
+              onPress={handleAddCustom}
+            >
               <Text style={styles.addButtonText}>Add Custom Workout</Text>
             </TouchableOpacity>
           </View>
@@ -258,31 +302,110 @@ const Workouts = () => {
 
 export default Workouts;
 
-// 🧩 STYLES unchanged
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
-  content: { flex: 1, paddingHorizontal: 16 },
-  header: { color: "#00ff88", fontSize: 28, fontWeight: "900", textAlign: "center", marginTop: 10, letterSpacing: 1 },
-  toggleContainer: { flexDirection: "row", backgroundColor: "#fff", borderRadius: 30, marginTop: 20, marginBottom: 15, overflow: "hidden" },
-  toggleButton: { flex: 1, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
-  toggleActive: { backgroundColor: "#00C853", borderRadius: 30 },
-  toggleText: { color: "#333", fontWeight: "700", fontSize: 16 },
-  toggleTextActive: { color: "#fff" },
-  button: { backgroundColor: "#00ff88", paddingVertical: 10, borderRadius: 10, marginTop: -12, alignItems: "center" },
-  buttonText: { color: "#000", fontWeight: "700", fontSize: 16 },
-  routineContainer: { backgroundColor: "#111", borderRadius: 10, padding: 12, marginTop: 8 },
-  routineTitle: { color: "#00ff88", fontWeight: "800", fontSize: 16, marginBottom: 6 },
-  routineText: { color: "#b7ffcc", fontSize: 14, marginVertical: 2, marginLeft: 4 },
-  customContainer: { backgroundColor: "#111", borderRadius: 12, padding: 16, marginTop: 10 },
-  customTitle: { color: "#00ff88", fontSize: 18, fontWeight: "800", marginBottom: 10, textAlign: "center" },
-  input: { backgroundColor: "#222", color: "#fff", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12, fontSize: 14 },
-  addButton: { backgroundColor: "#00ff88", paddingVertical: 12, borderRadius: 10, alignItems: "center" },
-  addButtonText: { color: "#000", fontWeight: "700", fontSize: 16 },
+  container: { 
+    flex: 1,
+  },
+  content: { 
+    flex: 1, 
+    paddingHorizontal: 16 
+  },
+  header: { 
+    fontSize: 28, 
+    fontWeight: "900", 
+    textAlign: "center", 
+    marginTop: 10, 
+    letterSpacing: 1 
+  },
+  toggleContainer: { 
+    flexDirection: "row", 
+    borderRadius: 30, 
+    marginTop: 20, 
+    marginBottom: 15, 
+    overflow: "hidden" 
+  },
+  toggleButton: { 
+    flex: 1, 
+    paddingVertical: 12, 
+    alignItems: "center", 
+    justifyContent: "center" 
+  },
+  toggleActive: { 
+    borderRadius: 30 
+  },
+  toggleText: { 
+    fontWeight: "700", 
+    fontSize: 16 
+  },
+  toggleTextActive: { 
+    color: "#fff" 
+  },
+  button: { 
+    paddingVertical: 10, 
+    borderRadius: 10, 
+    marginTop: -12, 
+    alignItems: "center" 
+  },
+  buttonText: { 
+    color: "#000", 
+    fontWeight: "700", 
+    fontSize: 16 
+  },
+  routineContainer: { 
+    borderRadius: 10, 
+    padding: 12, 
+    marginTop: 8 
+  },
+  routineTitle: { 
+    fontWeight: "800", 
+    fontSize: 16, 
+    marginBottom: 6 
+  },
+  routineText: { 
+    fontSize: 14, 
+    marginVertical: 2, 
+    marginLeft: 4 
+  },
+  customContainer: { 
+    borderRadius: 12, 
+    padding: 16, 
+    marginTop: 10 
+  },
+  customTitle: { 
+    fontSize: 18, 
+    fontWeight: "800", 
+    marginBottom: 10, 
+    textAlign: "center" 
+  },
+  input: { 
+    borderRadius: 10, 
+    paddingHorizontal: 12, 
+    paddingVertical: 10, 
+    marginBottom: 12, 
+    fontSize: 14,
+    borderWidth: 1
+  },
+  addButton: { 
+    paddingVertical: 12, 
+    borderRadius: 10, 
+    alignItems: "center" 
+  },
+  addButtonText: { 
+    color: "#000", 
+    fontWeight: "700", 
+    fontSize: 16 
+  },
   uploadButton: {
-    backgroundColor: "#00ff88",
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: "center",
     marginBottom: 8,
   },
+  preview: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    alignSelf: 'center',
+    marginBottom: 12,
+  }
 });

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Animated, Image, TouchableOpacity, 
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 const { width } = Dimensions.get('window');
 
@@ -43,6 +44,7 @@ const WeightLoss = () => {
   const [selectedPlan, setSelectedPlan] = useState("Beginner");
   const [activeTab, setActiveTab] = useState("meals");
   const router = useRouter();
+  const { colors, isDarkMode } = useTheme();
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
@@ -68,7 +70,6 @@ const WeightLoss = () => {
 
   const handleSelectPlan = (plan) => {
     setSelectedPlan(plan);
-    // Reset animation when plan changes
     scaleAnim.setValue(0.9);
     Animated.spring(scaleAnim, {
       toValue: 1,
@@ -80,36 +81,58 @@ const WeightLoss = () => {
 
   const currentPlan = mealPlans[selectedPlan];
 
+  // Gradient colors based on theme
+  const gradientColors = isDarkMode 
+    ? [colors.background, "#001a10", colors.background]
+    : ["#ffffff", "#f0fff8", "#ffffff"];
+
   return (
-    <LinearGradient colors={["#0a0a0a", "#001a10", "#0a0a0a"]} style={styles.bg}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={24} color="#00ff88" />
-        <Text style={styles.backText}>Back</Text>
+    <LinearGradient colors={gradientColors} style={styles.bg}>
+      <TouchableOpacity 
+        style={[
+          styles.backButton, 
+          { backgroundColor: isDarkMode ? 'rgba(0, 255, 136, 0.1)' : 'rgba(0, 128, 0, 0.1)' }
+        ]} 
+        onPress={() => router.back()}
+      >
+        <Ionicons name="chevron-back" size={24} color={colors.primary} />
+        <Text style={[styles.backText, { color: colors.primary }]}>Back</Text>
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.header, { transform: [{ scale: scaleAnim }] }]}>
-          <Text style={styles.title}> Weight Loss Journey</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.primary }]}>Weight Loss Journey</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Transform your body with our customized meal plans
           </Text>
         </Animated.View>
 
-        <Text style={styles.sectionTitle}>Choose Your Level</Text>
+        <Text style={[styles.sectionTitle, { color: colors.primary }]}>Choose Your Level</Text>
         <View style={styles.buttonContainer}>
           {Object.keys(mealPlans).map((plan) => (
             <TouchableOpacity
               key={plan}
               style={[
                 styles.planButton,
-                selectedPlan === plan && styles.planButtonActive,
+                { 
+                  backgroundColor: isDarkMode ? "#1a1a1a" : "#f0f0f0",
+                  borderColor: colors.primary 
+                },
+                selectedPlan === plan && [
+                  styles.planButtonActive, 
+                  { backgroundColor: colors.primary }
+                ],
               ]}
               onPress={() => handleSelectPlan(plan)}
             >
               <Text
                 style={[
                   styles.planButtonText,
-                  selectedPlan === plan && styles.planButtonTextActive,
+                  { color: colors.primary },
+                  selectedPlan === plan && [
+                    styles.planButtonTextActive,
+                    { color: isDarkMode ? "#000" : "#fff" }
+                  ],
                 ]}
               >
                 {plan}
@@ -124,78 +147,129 @@ const WeightLoss = () => {
             style={styles.planImage}
             resizeMode="cover"
           />
-          <View style={styles.planOverlay}>
-            <Text style={styles.planLevel}>{selectedPlan} Plan</Text>
-            <Text style={styles.planCalories}>{currentPlan.calories}</Text>
+          <View style={[styles.planOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.7)' }]}>
+            <Text style={[styles.planLevel, { color: colors.primary }]}>{selectedPlan} Plan</Text>
+            <Text style={[styles.planCalories, { color: colors.textSecondary }]}>{currentPlan.calories}</Text>
           </View>
         </Animated.View>
 
+        <Text style={[styles.planDescription, { color: colors.textSecondary }]}>
+          {currentPlan.description}
+        </Text>
 
-        <Text style={styles.planDescription}>{currentPlan.description}</Text>
-
-        <View style={styles.tabContainer}>
+        <View style={[
+          styles.tabContainer, 
+          { backgroundColor: isDarkMode ? "#1a1a1a" : "#f0f0f0" }
+        ]}>
           <TouchableOpacity 
-            style={[styles.tab, activeTab === "meals" && styles.tabActive]}
+            style={[
+              styles.tab, 
+              activeTab === "meals" && [
+                styles.tabActive,
+                { backgroundColor: colors.primary }
+              ]
+            ]}
             onPress={() => setActiveTab("meals")}
           >
             <Ionicons 
               name="restaurant" 
               size={20} 
-              color={activeTab === "meals" ? "#000" : "#00ff88"} 
+              color={activeTab === "meals" ? (isDarkMode ? "#000" : "#fff") : colors.primary} 
             />
-            <Text style={[styles.tabText, activeTab === "meals" && styles.tabTextActive]}>
+            <Text style={[
+              styles.tabText, 
+              { color: activeTab === "meals" ? (isDarkMode ? "#000" : "#fff") : colors.primary },
+              activeTab === "meals" && styles.tabTextActive
+            ]}>
               Daily Meals
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.tab, activeTab === "tips" && styles.tabActive]}
+            style={[
+              styles.tab, 
+              activeTab === "tips" && [
+                styles.tabActive,
+                { backgroundColor: colors.primary }
+              ]
+            ]}
             onPress={() => setActiveTab("tips")}
           >
             <Ionicons 
               name="bulb" 
               size={20} 
-              color={activeTab === "tips" ? "#000" : "#00ff88"} 
+              color={activeTab === "tips" ? (isDarkMode ? "#000" : "#fff") : colors.primary} 
             />
-            <Text style={[styles.tabText, activeTab === "tips" && styles.tabTextActive]}>
+            <Text style={[
+              styles.tabText, 
+              { color: activeTab === "tips" ? (isDarkMode ? "#000" : "#fff") : colors.primary },
+              activeTab === "tips" && styles.tabTextActive
+            ]}>
               Pro Tips
             </Text>
           </TouchableOpacity>
         </View>
 
         {activeTab === "meals" ? (
-          <View style={styles.mealsContainer}>
-            <Text style={styles.tipsTitle}>Your Daily Nutrition</Text>
+          <View style={[
+            styles.mealsContainer, 
+            { 
+              backgroundColor: isDarkMode ? "#1a1a1a" : "#f8f8f8",
+              borderColor: colors.primary 
+            }
+          ]}>
+            <Text style={[styles.tipsTitle, { color: colors.primary }]}>Your Daily Nutrition</Text>
             {Object.entries(currentPlan).map(([key, value]) => {
               if (['Breakfast', 'Lunch', 'Dinner', 'Snacks'].includes(key)) {
                 return (
-                  <View key={key} style={styles.mealItem}>
+                  <View key={key} style={[
+                    styles.mealItem,
+                    { 
+                      backgroundColor: isDarkMode ? "#0a0a0a" : "#ffffff",
+                      borderLeftColor: colors.primary 
+                    }
+                  ]}>
                     <View style={styles.mealHeader}>
-                      <Text style={styles.mealName}>{key}</Text>
-                      <Ionicons name="nutrition" size={16} color="#00ff88" />
+                      <Text style={[styles.mealName, { color: colors.primary }]}>{key}</Text>
+                      <Ionicons name="nutrition" size={16} color={colors.primary} />
                     </View>
-                    <Text style={styles.mealDescription}>{value}</Text>
+                    <Text style={[styles.mealDescription, { color: colors.textSecondary }]}>{value}</Text>
                   </View>
                 );
               }
             })}
           </View>
         ) : (
-          <View style={styles.tipsContainer}>
-            <Text style={styles.tipsTitle}>💡 Expert Tips</Text>
+          <View style={[
+            styles.tipsContainer, 
+            { 
+              backgroundColor: isDarkMode ? "#1a1a1a" : "#f8f8f8",
+              borderColor: colors.primary 
+            }
+          ]}>
+            <Text style={[styles.tipsTitle, { color: colors.primary }]}>💡 Expert Tips</Text>
             {currentPlan.tips.map((tip, index) => (
-              <View key={index} style={styles.tipItem}>
-                <Ionicons name="checkmark-circle" size={20} color="#00ff88" />
-                <Text style={styles.tipText}>{tip}</Text>
+              <View key={index} style={[
+                styles.tipItem,
+                { backgroundColor: isDarkMode ? "#0a0a0a" : "#ffffff" }
+              ]}>
+                <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                <Text style={[styles.tipText, { color: colors.textSecondary }]}>{tip}</Text>
               </View>
             ))}
           </View>
         )}
 
-        <View style={styles.motivationCard}>
-          <Ionicons name="flame" size={32} color="#00ff88" />
-          <Text style={styles.motivationTitle}>Stay Motivated!</Text>
-          <Text style={styles.motivationText}>
+        <View style={[
+          styles.motivationCard, 
+          { 
+            backgroundColor: isDarkMode ? "#1a1a1a" : "#f8f8f8",
+            borderColor: colors.primary 
+          }
+        ]}>
+          <Ionicons name="flame" size={32} color={colors.primary} />
+          <Text style={[styles.motivationTitle, { color: colors.primary }]}>Stay Motivated!</Text>
+          <Text style={[styles.motivationText, { color: colors.textSecondary }]}>
             Consistency is key. Track your progress weekly and celebrate small victories!
           </Text>
         </View>
@@ -219,12 +293,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     zIndex: 10,
-    backgroundColor: 'rgba(0, 255, 136, 0.1)',
     padding: 8,
     borderRadius: 20,
   },
   backText: {
-    color: '#00ff88',
     fontWeight: '600',
     marginLeft: 4,
   },
@@ -233,22 +305,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  title: {
-    color: "#00ff88", 
+  title: { 
     fontSize: 32, 
     fontWeight: "900", 
     textAlign: "center", 
     marginBottom: 8,
   },
-  subtitle: {
-    color: "#bfffd6", 
+  subtitle: { 
     fontSize: 16, 
     textAlign: "center", 
     opacity: 0.8,
   },
 
   sectionTitle: {
-    color: '#00ff88',
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 15,
@@ -261,31 +330,25 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   planButton: { 
-    backgroundColor: "#1a1a1a", 
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25, 
     borderWidth: 1, 
-    borderColor: "#00ff88", 
     flex: 1,
     marginHorizontal: 5,
     alignItems: 'center',
   },
   planButtonActive: {
-    backgroundColor: "#00ff88",
-    shadowColor: "#00ff88",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
   planButtonText: { 
-    color: "#00ff88", 
     fontWeight: "700", 
     fontSize: 14,
   },
   planButtonTextActive: {
-    color: "#000",
     fontWeight: "800",
   },
 
@@ -305,21 +368,17 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 15,
   },
   planLevel: {
-    color: '#00ff88',
     fontSize: 18,
     fontWeight: '800',
   },
   planCalories: {
-    color: '#bfffd6',
     fontSize: 14,
     fontWeight: '600',
   },
   planDescription: {
-    color: '#bfffd6',
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 20,
@@ -328,7 +387,6 @@ const styles = StyleSheet.create({
 
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#1a1a1a',
     borderRadius: 15,
     padding: 4,
     marginBottom: 20,
@@ -342,36 +400,32 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tabActive: {
-    backgroundColor: '#00ff88',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   tabText: {
-    color: '#00ff88',
     fontWeight: '700',
     marginLeft: 6,
   },
   tabTextActive: {
-    color: '#000',
     fontWeight: '800',
   },
 
   mealsContainer: {
-    backgroundColor: "#1a1a1a", 
     borderRadius: 20, 
     padding: 20, 
     borderWidth: 1, 
-    borderColor: "#004d2b",
     marginBottom: 20,
   },
   tipsContainer: {
-    backgroundColor: "#1a1a1a", 
     borderRadius: 20, 
     padding: 20, 
     borderWidth: 1, 
-    borderColor: "#004d2b",
     marginBottom: 20,
   },
   tipsTitle: {
-    color: "#00ff88", 
     fontSize: 22, 
     fontWeight: "800", 
     marginBottom: 15,
@@ -379,12 +433,10 @@ const styles = StyleSheet.create({
   },
 
   mealItem: {
-    backgroundColor: '#0a0a0a',
     padding: 15,
     borderRadius: 12,
     marginBottom: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#00ff88',
   },
   mealHeader: {
     flexDirection: 'row',
@@ -393,12 +445,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   mealName: {
-    color: '#00ff88',
     fontSize: 16,
     fontWeight: '700',
   },
   mealDescription: {
-    color: '#bfffd6',
     fontSize: 14,
     lineHeight: 20,
   },
@@ -406,51 +456,30 @@ const styles = StyleSheet.create({
   tipItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0a0a0a',
     padding: 15,
     borderRadius: 12,
     marginBottom: 10,
   },
   tipText: {
-    color: '#bfffd6',
     fontSize: 14,
     marginLeft: 10,
     flex: 1,
     lineHeight: 20,
   },
   motivationCard: {
-    backgroundColor: '#1a1a1a',
     borderRadius: 20,
     padding: 25,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#00ff88',
   },
   motivationTitle: {
-    color: '#00ff88',
     fontSize: 20,
     fontWeight: '800',
     marginVertical: 10,
   },
   motivationText: {
-    color: '#bfffd6',
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
-  },
-  swipeContainer: {
-    position: "absolute",
-    left: 20,
-    top: "50%",
-    transform: [{ translateY: -20 }],
-    flexDirection: "row",
-    alignItems: "center",
-    zIndex: 10,
-  },
-  swipeTipText: { 
-    color: "#fff", 
-    fontWeight: "700", 
-    fontSize: 14,
-    marginLeft: 8,
   },
 });

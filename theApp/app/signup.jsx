@@ -11,10 +11,12 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import InputField from "../components/InputField"; // Adjust path as needed
+import { useTheme } from "../context/ThemeContext";
+import InputField from "../components/InputField";
 
 const Signup = () => {
   const router = useRouter();
+  const { colors, isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -23,10 +25,7 @@ const Signup = () => {
   });
 
   const handleSignup = () => {
-    // Handle signup logic here
     console.log("Signup attempt:", formData);
-    // After successful signup, you might navigate to the home page
-    // router.push("/");
   };
 
   const updateFormData = (field, value) => {
@@ -37,8 +36,12 @@ const Signup = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" translucent={false} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar 
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={colors.background}
+        translucent={false} 
+      />
       
       <KeyboardAvoidingView 
         style={styles.keyboardAvoid}
@@ -53,14 +56,20 @@ const Signup = () => {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backText}>← Back</Text>
+            <Text style={[styles.backText, { color: colors.primary }]}>← Back</Text>
           </TouchableOpacity>
 
           {/* Header */}
           <View style={styles.headerWrap}>
-            <Text style={styles.topTitle}>ILLYRIAN GYM</Text>
-            <Text style={styles.welcomeText}>Join Our Community</Text>
-            <Text style={styles.subtitle}>Create your account and start your fitness journey</Text>
+            <Text style={[styles.topTitle, { color: colors.primary }]}>
+              ILLYRIAN GYM
+            </Text>
+            <Text style={[styles.welcomeText, { color: colors.text }]}>
+              Join Our Community
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Create your account and start your fitness journey
+            </Text>
           </View>
 
           {/* Signup Form */}
@@ -106,7 +115,7 @@ const Signup = () => {
 
             {/* Signup Button */}
             <TouchableOpacity 
-              style={styles.signupButton}
+              style={[styles.signupButton, { backgroundColor: colors.primary }]}
               onPress={handleSignup}
             >
               <Text style={styles.signupButtonText}>Create Account</Text>
@@ -114,16 +123,18 @@ const Signup = () => {
 
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.dividerText, { color: colors.textSecondary }]}>OR</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </View>
 
             {/* Login Redirect */}
             <View style={styles.loginRedirect}>
-              <Text style={styles.loginText}>Already have an account? </Text>
+              <Text style={[styles.loginText, { color: colors.textSecondary }]}>
+                Already have an account? 
+              </Text>
               <TouchableOpacity onPress={() => router.push("/login")}>
-                <Text style={styles.loginLink}>Sign In</Text>
+                <Text style={[styles.loginLink, { color: colors.primary }]}>Sign In</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -140,7 +151,6 @@ export default Signup;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
   },
   keyboardAvoid: {
     flex: 1,
@@ -159,7 +169,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   backText: {
-    color: "#00ff88",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -170,25 +179,21 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   topTitle: {
-    color: "#00ff88",
     fontSize: 32,
     fontWeight: "900",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    textShadowColor: "#00ff88",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
     marginBottom: 10,
   },
   welcomeText: {
-    color: "#bfffd6",
     fontSize: 28,
     fontWeight: "800",
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
-    color: "#9fbfaa",
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
@@ -202,20 +207,18 @@ const styles = StyleSheet.create({
   
   // Signup Button
   signupButton: {
-    backgroundColor: "#06d68a",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
     marginBottom: 30,
-    shadowColor: "#00ff7f",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   signupButtonText: {
-    color: "#02120a",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "800",
     letterSpacing: 0.5,
@@ -230,10 +233,8 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#333",
   },
   dividerText: {
-    color: "#666",
     paddingHorizontal: 15,
     fontSize: 12,
     fontWeight: "600",
@@ -246,11 +247,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loginText: {
-    color: "#9fbfaa",
     fontSize: 14,
   },
   loginLink: {
-    color: "#00ff88",
     fontSize: 14,
     fontWeight: "700",
   },

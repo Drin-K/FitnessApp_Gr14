@@ -27,13 +27,6 @@ const Index = () => {
 
       <View style={[styles.background, { backgroundColor: colors.background }]}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          
-          {/* 🔘 Theme Toggle Button
-          <TouchableOpacity
-            style={[styles.themeButton, { borderColor: colors.primary }]}
-            onPress={toggleTheme}
-          >
-          </TouchableOpacity> */}
 
           {/* Top Header */}
           <View style={styles.topContainer}>
