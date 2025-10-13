@@ -3,7 +3,6 @@ import { View, StyleSheet, Platform } from "react-native";
 import { Stack } from "expo-router";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
-import List from "../components/list";
 
 // LayoutContent uses the theme hook; ThemeProvider must wrap it
 const LayoutContent = () => {
@@ -25,8 +24,7 @@ const LayoutContent = () => {
       {/* Theme toggle visible on every screen */}
       <ThemeToggle style={toggleStyle} />
 
-      {/* bottom navigation */}
-      <List />
+      {/* Bottom navigation removed from here */}
     </View>
   );
 };
