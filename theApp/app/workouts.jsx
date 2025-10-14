@@ -139,6 +139,7 @@ const Workouts = () => {
       backgroundColor={colors.background}
       translucent={false} 
     />
+    <ScrollView>
     
     <View style={styles.content}>
       {/* Header */}
@@ -228,10 +229,10 @@ const Workouts = () => {
         />
       ) : (
         // Custom Workout Section - Now wrapped in ScrollView since it's not a FlatList
-        <ScrollView 
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
+        // <ScrollView 
+        //   contentContainerStyle={styles.scroll}
+        //   showsVerticalScrollIndicator={false}
+        // >
           <View style={[styles.customContainer, { backgroundColor: colors.card }]}>
             <Text style={[styles.customTitle, { color: colors.primary }]}>
               Create Custom Workout
@@ -300,10 +301,10 @@ const Workouts = () => {
               <Text style={styles.addButtonText}>Add Custom Workout</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        // </ScrollView>
       )}
     </View>
-    
+    </ScrollView>
     <List onNavigate={(p) => router.push(p)} />
   </SafeAreaView>
 );
