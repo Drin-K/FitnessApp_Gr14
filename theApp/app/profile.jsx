@@ -1,56 +1,68 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Platform, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import List from "../components/list";
 
 const Settings = () => {
+  const router = useRouter();
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-      <View style={styles.content}>
-      <LinearGradient colors={["#0a0a0a", "#001a10", "#000"]} style={styles.bg}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          {/* Profile Section */}
-          <View style={styles.profileContainer}>
-            <Image
-              source={{ uri: "https://i.imgur.com/3GvwNBf.png" }}
-              style={styles.profileImage}
-            />
-            <Text style={styles.profileName}>Floyd Miles</Text>
-            <Text style={styles.profileEmail}>floydmiles@gmail.com</Text>
-          </View>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0 },
+      ]}
+    >
+      <View style={{ flex: 1 }}>
+        <LinearGradient colors={["#0a0a0a", "#001a10", "#000"]} style={styles.bg}>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Profile Section */}
+            <View style={styles.profileContainer}>
+              <Image
+                source={{ uri: "https://i.imgur.com/3GvwNBf.png" }}
+                style={styles.profileImage}
+              />
+              <Text style={styles.profileName}>Floyd Miles</Text>
+              <Text style={styles.profileEmail}>floydmiles@gmail.com</Text>
+            </View>
 
-          {/* Account Settings */}
-          <Text style={styles.sectionTitle}>Account Settings</Text>
-          <View style={styles.card}>
-            <SettingItem icon="person-outline" label="Edit Profile" />
-            <SettingItem icon="lock-closed-outline" label="Change Password" />
-            <SettingItem icon="notifications-outline" label="Notifications" />
-          </View>
+            {/* Account Settings */}
+            <Text style={styles.sectionTitle}>Account Settings</Text>
+            <View style={styles.card}>
+              <SettingItem icon="person-outline" label="Edit Profile" />
+              <SettingItem icon="lock-closed-outline" label="Change Password" />
+              <SettingItem icon="notifications-outline" label="Notifications" />
+            </View>
 
-          {/* More Section */}
-          <Text style={styles.sectionTitle}>More</Text>
-          <View style={styles.card}>
-            <SettingItem icon="globe-outline" label="Language" />
-            <SettingItem icon="shield-outline" label="Privacy" />
-            <SettingItem icon="help-circle-outline" label="Help" />
-          </View>
+            {/* More Section */}
+            <Text style={styles.sectionTitle}>More</Text>
+            <View style={styles.card}>
+              <SettingItem icon="globe-outline" label="Language" />
+              <SettingItem icon="shield-outline" label="Privacy" />
+              <SettingItem icon="help-circle-outline" label="Help" />
+            </View>
 
-         
-          <TouchableOpacity style={styles.logoutButton}>
-            <Text style={styles.logoutText}>Log Out</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </LinearGradient>
+            {/* Log out */}
+            <TouchableOpacity style={styles.logoutButton}>
+              <Text style={styles.logoutText}>Log Out</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </LinearGradient>
+
+        {/* FIXED FOOTER */}
+        <View style={styles.footer}>
+          <List onNavigate={(p) => router.push(p)} />
+        </View>
       </View>
-      </ScrollView>
-      <List onNavigate={(p) => router.push(p)} />
     </SafeAreaView>
   );
 };
-
 
 const SettingItem = ({ icon, label }) => (
   <TouchableOpacity style={styles.item}>
@@ -65,16 +77,17 @@ const SettingItem = ({ icon, label }) => (
 export default Settings;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
-    content: { 
-    flex: 1, 
-    paddingHorizontal: 16 
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
   },
-  scroll: { 
-    padding: 20 
+  bg: {
+    flex: 1,
   },
-  bg: { flex: 1 },
-  scroll: { padding: 20 },
+  scroll: {
+    padding: 20,
+    paddingBottom: 120, // space for footer
+  },
   profileContainer: {
     alignItems: "center",
     marginBottom: 25,
@@ -143,5 +156,9 @@ const styles = StyleSheet.create({
     color: "#ff4c4c",
     fontWeight: "700",
     fontSize: 15,
+  },
+  footer: {
+    flexShrink: 0,
+    backgroundColor: "transparent",
   },
 });

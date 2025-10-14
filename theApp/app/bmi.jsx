@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import List from "../components/list";
-import { ScrollView } from "react-native";
+import { useRouter } from "expo-router";
+
 const BMI = () => {
+  const router = useRouter();
+
   const [gender, setGender] = useState(null);
   const [height, setHeight] = useState(167);
   const [weight, setWeight] = useState(60);
   const [age, setAge] = useState(20);
-
 
   const decreaseAge = () => {
     if (age > 13) setAge(age - 1);
@@ -28,76 +30,90 @@ const BMI = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-      <Text style={styles.title}>BMI Calculator</Text>
+    <SafeAreaView
+      style={[
+        styles.container,
+        {
+          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
+        },
+      ]}
+    >
+      {/* main area fills screen so footer can stay fixed */}
+      <View style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <Text style={styles.title}>BMI Calculator</Text>
 
-      {/* Selektimi i Gjinise */}
-      <View style={styles.genderContainer}>
-        <TouchableOpacity
-          style={[styles.genderBox, gender === "male" && styles.activeGender]}
-          onPress={() => setGender("male")}
-        >
-          <Text style={styles.genderText}>♂ Male</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.genderBox, gender === "female" && styles.activeGender]}
-          onPress={() => setGender("female")}
-        >
-          <Text style={styles.genderText}>♀ Female</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Gjatsia slider */}
-      <View style={styles.sliderBox}>
-        <Text style={styles.label}>HEIGHT</Text>
-        <Text style={styles.value}>{height} cm</Text>
-        <Slider
-          style={{ width: "100%" }}
-          minimumValue={100}
-          maximumValue={220}
-          value={height}
-          onValueChange={(value) => setHeight(Math.round(value))}
-          minimumTrackTintColor="#28a745"
-          thumbTintColor="#28a745"
-        />
-      </View>
-
-      {/* Weight & Age boxes */}
-      <View style={styles.rowBox}>
-        <View style={styles.smallBox}>
-          <Text style={styles.label}>WEIGHT</Text>
-          <Text style={styles.value}>{weight} kg</Text>
-          <View style={styles.btnRow}>
-            <TouchableOpacity style={styles.circleBtn} onPress={decreaseWeight}>
-              <Text style={styles.btnText}>-</Text>
+          {/* Selektimi i Gjinise */}
+          <View style={styles.genderContainer}>
+            <TouchableOpacity
+              style={[styles.genderBox, gender === "male" && styles.activeGender]}
+              onPress={() => setGender("male")}
+            >
+              <Text style={styles.genderText}>♂ Male</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.circleBtn} onPress={increaseWeight}>
-              <Text style={styles.btnText}>+</Text>
+            <TouchableOpacity
+              style={[styles.genderBox, gender === "female" && styles.activeGender]}
+              onPress={() => setGender("female")}
+            >
+              <Text style={styles.genderText}>♀ Female</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        <View style={styles.smallBox}>
-          <Text style={styles.label}>AGE</Text>
-          <Text style={styles.value}>{age}</Text>
-          <View style={styles.btnRow}>
-            <TouchableOpacity style={styles.circleBtn} onPress={decreaseAge}>
-              <Text style={styles.btnText}>-</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.circleBtn} onPress={increaseAge}>
-              <Text style={styles.btnText}>+</Text>
-            </TouchableOpacity>
+          {/* Gjatsia slider */}
+          <View style={styles.sliderBox}>
+            <Text style={styles.label}>HEIGHT</Text>
+            <Text style={styles.value}>{height} cm</Text>
+            <Slider
+              style={{ width: "100%" }}
+              minimumValue={100}
+              maximumValue={220}
+              value={height}
+              onValueChange={(value) => setHeight(Math.round(value))}
+              minimumTrackTintColor="#28a745"
+              thumbTintColor="#28a745"
+            />
           </View>
+
+          {/* Weight & Age boxes */}
+          <View style={styles.rowBox}>
+            <View style={styles.smallBox}>
+              <Text style={styles.label}>WEIGHT</Text>
+              <Text style={styles.value}>{weight} kg</Text>
+              <View style={styles.btnRow}>
+                <TouchableOpacity style={styles.circleBtn} onPress={decreaseWeight}>
+                  <Text style={styles.btnText}>-</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.circleBtn} onPress={increaseWeight}>
+                  <Text style={styles.btnText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.smallBox}>
+              <Text style={styles.label}>AGE</Text>
+              <Text style={styles.value}>{age}</Text>
+              <View style={styles.btnRow}>
+                <TouchableOpacity style={styles.circleBtn} onPress={decreaseAge}>
+                  <Text style={styles.btnText}>-</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.circleBtn} onPress={increaseAge}>
+                  <Text style={styles.btnText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/*Butoni i kalkulimit */}
+          <TouchableOpacity style={styles.button}>
+            <Text style={styles.buttonText}>Calculate BMI</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* FIXED footer */}
+        <View style={styles.footer}>
+          <List onNavigate={(p) => router.push(p)} />
         </View>
       </View>
-
-      {/*Butoni i kalkulimit */}
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Calculate BMI</Text>
-      </TouchableOpacity>
-      </ScrollView>
-      <List onNavigate={(p) => router.push(p)} />
     </SafeAreaView>
   );
 };
@@ -105,18 +121,12 @@ const BMI = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#000", // keep background black
+  },
+  // scroll container: add paddingBottom to avoid footer overlap
+  scroll: {
     padding: 20,
-  },
-  container: { flex: 1, backgroundColor: "#000" },
-    content: { 
-    flex: 1, 
-    paddingHorizontal: 16 
-  },
-  scroll: { 
-    padding: 20 
+    paddingBottom: 120, // leave space for footer
   },
   title: {
     color: "#fff",
@@ -204,6 +214,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  footer: {
+    flexShrink: 0,
+    backgroundColor: "transparent", // List likely handles its own bg
   },
 });
 
