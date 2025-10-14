@@ -124,109 +124,114 @@ const Workouts = () => {
     Alert.alert("Success", "✅ Workout added successfully");
   };
 
-  return (
-    <SafeAreaView
-      style={[
-        styles.container, 
-        { 
-          backgroundColor: colors.background,
-          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 
-        }
-      ]}
-    >
-    <ScrollView contentContainerStyle={styles.scroll}>
-      <StatusBar 
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={colors.background}
-        translucent={false} 
-      />
-      <View style={styles.content}>
-        {/* Header */}
-        <Text style={[styles.header, { color: colors.primary }]}>Plans</Text>
+ return (
+  <SafeAreaView
+    style={[
+      styles.container, 
+      { 
+        backgroundColor: colors.background,
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 
+      }
+    ]}
+  >
+    <StatusBar 
+      barStyle={isDarkMode ? "light-content" : "dark-content"}
+      backgroundColor={colors.background}
+      translucent={false} 
+    />
+    
+    <View style={styles.content}>
+      {/* Header */}
+      <Text style={[styles.header, { color: colors.primary }]}>Plans</Text>
 
-        {/* Toggle Switch */}
-        <View style={[
-          styles.toggleContainer, 
-          { backgroundColor: colors.card }
-        ]}>
-          <TouchableOpacity
+      {/* Toggle Switch */}
+      <View style={[
+        styles.toggleContainer, 
+        { backgroundColor: colors.card }
+      ]}>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            activeTab === "Workouts" && [styles.toggleActive, { backgroundColor: colors.primary }]
+          ]}
+          onPress={() => setActiveTab("Workouts")}
+        >
+          <Text
             style={[
-              styles.toggleButton,
-              activeTab === "Workouts" && [styles.toggleActive, { backgroundColor: colors.primary }]
+              styles.toggleText,
+              { color: colors.text },
+              activeTab === "Workouts" && styles.toggleTextActive
             ]}
-            onPress={() => setActiveTab("Workouts")}
           >
-            <Text
-              style={[
-                styles.toggleText,
-                { color: colors.text },
-                activeTab === "Workouts" && styles.toggleTextActive
-              ]}
-            >
-              Workouts
-            </Text>
-          </TouchableOpacity>
+            Workouts
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            activeTab === "Custom" && [styles.toggleActive, { backgroundColor: colors.primary }]
+          ]}
+          onPress={() => setActiveTab("Custom")}
+        >
+          <Text
             style={[
-              styles.toggleButton,
-              activeTab === "Custom" && [styles.toggleActive, { backgroundColor: colors.primary }]
+              styles.toggleText,
+              { color: colors.text },
+              activeTab === "Custom" && styles.toggleTextActive
             ]}
-            onPress={() => setActiveTab("Custom")}
           >
-            <Text
-              style={[
-                styles.toggleText,
-                { color: colors.text },
-                activeTab === "Custom" && styles.toggleTextActive
-              ]}
-            >
-              Custom
-            </Text>
-          </TouchableOpacity>
-        </View>
+            Custom
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        {/* Workouts Section */}
-        {activeTab === "Workouts" ? (
-          <FlatList
-            data={workouts}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={{ marginBottom: 45 }}>
-                <WorkoutCard
-                  title={item.title}
-                  duration={item.duration}
-                  functionality={item.functionality}
-                  image={item.image}
-                />
-                <TouchableOpacity
-                  style={[styles.button, { backgroundColor: colors.primary }]}
-                  onPress={() => toggleExpand(item.id)}
-                >
-                  <Text style={styles.buttonText}>
-                    {expandedId === item.id ? "Hide Workout" : "See Workout"}
+      {/* Workouts Section */}
+      {activeTab === "Workouts" ? (
+        <FlatList
+          data={workouts}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={{ marginBottom: 45 }}>
+              <WorkoutCard
+                title={item.title}
+                duration={item.duration}
+                functionality={item.functionality}
+                image={item.image}
+              />
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: colors.primary }]}
+                onPress={() => toggleExpand(item.id)}
+              >
+                <Text style={styles.buttonText}>
+                  {expandedId === item.id ? "Hide Workout" : "See Workout"}
+                </Text>
+              </TouchableOpacity>
+
+              {expandedId === item.id && (
+                <View style={[styles.routineContainer, { backgroundColor: colors.card }]}>
+                  <Text style={[styles.routineTitle, { color: colors.primary }]}>
+                    Workout Routine
                   </Text>
-                </TouchableOpacity>
-
-                {expandedId === item.id && (
-                  <View style={[styles.routineContainer, { backgroundColor: colors.card }]}>
-                    <Text style={[styles.routineTitle, { color: colors.primary }]}>
-                      Workout Routine
+                  {item.routine.map((routine, index) => (
+                    <Text key={index} style={[styles.routineText, { color: colors.textSecondary }]}>
+                      • {routine}
                     </Text>
-                    {item.routine.map((routine, index) => (
-                      <Text key={index} style={[styles.routineText, { color: colors.textSecondary }]}>
-                        • {routine}
-                      </Text>
-                    ))}
-                  </View>
-                )}
-              </View>
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 16 }}
-          />
-        ) : (
-          // Custom Workout Section
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 16 }}
+          ListHeaderComponent={<View />} // Empty header to maintain spacing
+        />
+      ) : (
+        // Custom Workout Section - Now wrapped in ScrollView since it's not a FlatList
+        <ScrollView 
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={[styles.customContainer, { backgroundColor: colors.card }]}>
             <Text style={[styles.customTitle, { color: colors.primary }]}>
               Create Custom Workout
@@ -260,7 +265,7 @@ const Workouts = () => {
                 borderColor: colors.border 
               }]}
               placeholder="Description"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}q
               value={customDescription}
               onChangeText={setCustomDescription}
             />
@@ -295,12 +300,13 @@ const Workouts = () => {
               <Text style={styles.addButtonText}>Add Custom Workout</Text>
             </TouchableOpacity>
           </View>
-        )}
-      </View>
-      </ScrollView>
-       <List onNavigate={(p) => router.push(p)} />
-    </SafeAreaView>
-  );
+        </ScrollView>
+      )}
+    </View>
+    
+    <List onNavigate={(p) => router.push(p)} />
+  </SafeAreaView>
+);
 };
 
 export default Workouts;
