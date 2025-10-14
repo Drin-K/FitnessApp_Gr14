@@ -21,6 +21,31 @@ const InputField = ({
   error,
   ...props
 }) => {
+  // Helper function to validate and render icon
+  const renderIcon = () => {
+    if (!icon) return null;
+    
+    // Check if icon is a valid React element
+    if (React.isValidElement(icon)) {
+      return (
+        <TouchableOpacity onPress={onIconPress} style={styles.iconContainer}>
+          {icon}
+        </TouchableOpacity>
+      );
+    }
+    
+    // If icon is a string, wrap it in Text component
+    if (typeof icon === 'string') {
+      return (
+        <TouchableOpacity onPress={onIconPress} style={styles.iconContainer}>
+          <Text style={styles.iconText}>{icon}</Text>
+        </TouchableOpacity>
+      );
+    }
+    
+    return null;
+  };
+
   return (
     <View style={styles.inputGroup}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -43,11 +68,7 @@ const InputField = ({
           {...props}
         />
         
-        {icon && (
-          <TouchableOpacity onPress={onIconPress} style={styles.iconContainer}>
-            {icon}
-          </TouchableOpacity>
-        )}
+        {renderIcon()}
       </View>
       
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -87,6 +108,10 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     padding: 4,
+  },
+  iconText: {
+    color: '#fff',
+    fontSize: 16,
   },
   errorText: {
     color: '#ff4444',

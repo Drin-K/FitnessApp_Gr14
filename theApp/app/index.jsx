@@ -26,9 +26,9 @@ const Index = () => {
 
       <TouchableOpacity 
         style={[styles.loginButton, { backgroundColor: colors.primary }]}
-        onPress={() => router.push("/login")}
+        onPress={() => router.push("/signup")}
       >
-        <Text style={styles.loginText}>Login</Text>
+        <Text style={styles.loginText}>Sign up</Text>
       </TouchableOpacity>
 
       <View style={styles.background}>
