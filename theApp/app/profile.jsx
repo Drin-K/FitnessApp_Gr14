@@ -101,7 +101,81 @@ const styles = StyleSheet.create({
   buttonGroup: {
     marginTop: 6,
   },
-  
+  authButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    marginBottom: 18,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  appleButton: {
+    backgroundColor: "#333333", 
+  },
+  emailButton: {
+    backgroundColor: "#4CAF50", 
+  },
+  googleButton: {
+    backgroundColor: "#4285F4", 
+  },
+  buttonText: {
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  spacer: {
+    height: 30,
+  },
+  moreCard: {
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 80,
+  },
+  moreLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    marginRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    padding: 5,
+  },
+  iconDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 2,
+    backgroundColor: "#2D2D2D",
+    margin: 1,
+  },
+  moreText: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  linksRow: {
+    marginTop: 22,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 4,
+  },
+  link: {
+    textDecorationLine: "underline",
+    fontSize: 16,
+  },
 });
 
 export default ProfileScreen;
