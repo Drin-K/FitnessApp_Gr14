@@ -23,14 +23,6 @@ const Index = () => {
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
       />
-
-      <TouchableOpacity 
-        style={[styles.loginButton, { backgroundColor: colors.primary }]}
-        onPress={() => router.push("/signup")}
-      >
-        <Text style={styles.loginText}>Sign up</Text>
-      </TouchableOpacity>
-
       <View style={styles.background}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           
@@ -92,6 +84,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   background: {
+    marginTop:40,
     flex: 1,
   },
   scroll: {
@@ -151,9 +144,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   runner: {
-    width: "100%",
-    height: 300,
-    marginBottom: 10,
+    width: 400,
+    height: 400,
+    marginBottom:-30,
+    marginRight:20,
+    marginTop:-20,
   },
   heroText: {
     fontSize: 15,

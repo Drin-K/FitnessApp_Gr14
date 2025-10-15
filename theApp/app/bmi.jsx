@@ -4,9 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import List from "../components/list";
 import { useRouter } from "expo-router";
+import { useTheme } from "../context/ThemeContext";
 
 const BMI = () => {
   const router = useRouter();
+  const { colors, isDarkMode } = useTheme();
 
   const [gender, setGender] = useState(null);
   const [height, setHeight] = useState(167);
@@ -33,78 +35,105 @@ const BMI = () => {
     <SafeAreaView
       style={[
         styles.container,
-        {
+        { 
+          backgroundColor: colors.background,
           paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
         },
       ]}
     >
+      <StatusBar 
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={colors.background}
+        translucent={false} 
+      />
+      
       {/* main area fills screen so footer can stay fixed */}
       <View style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>BMI Calculator</Text>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]} showsVerticalScrollIndicator={false}>
+          <Text style={[styles.title, { color: colors.text }]}>BMI Calculator</Text>
 
           {/* Selektimi i Gjinise */}
           <View style={styles.genderContainer}>
             <TouchableOpacity
-              style={[styles.genderBox, gender === "male" && styles.activeGender]}
+              style={[
+                styles.genderBox, 
+                { backgroundColor: colors.card },
+                gender === "male" && [styles.activeGender, { borderColor: colors.primary }]
+              ]}
               onPress={() => setGender("male")}
             >
-              <Text style={styles.genderText}>♂ Male</Text>
+              <Text style={[styles.genderText, { color: colors.text }]}>♂ Male</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.genderBox, gender === "female" && styles.activeGender]}
+              style={[
+                styles.genderBox, 
+                { backgroundColor: colors.card },
+                gender === "female" && [styles.activeGender, { borderColor: colors.primary }]
+              ]}
               onPress={() => setGender("female")}
             >
-              <Text style={styles.genderText}>♀ Female</Text>
+              <Text style={[styles.genderText, { color: colors.text }]}>♀ Female</Text>
             </TouchableOpacity>
           </View>
 
           {/* Gjatsia slider */}
-          <View style={styles.sliderBox}>
-            <Text style={styles.label}>HEIGHT</Text>
-            <Text style={styles.value}>{height} cm</Text>
+          <View style={[styles.sliderBox, { backgroundColor: colors.card }]}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>HEIGHT</Text>
+            <Text style={[styles.value, { color: colors.text }]}>{height} cm</Text>
             <Slider
               style={{ width: "100%" }}
               minimumValue={100}
               maximumValue={220}
               value={height}
               onValueChange={(value) => setHeight(Math.round(value))}
-              minimumTrackTintColor="#28a745"
-              thumbTintColor="#28a745"
+              minimumTrackTintColor={colors.primary}
+              thumbTintColor={colors.primary}
             />
           </View>
 
           {/* Weight & Age boxes */}
           <View style={styles.rowBox}>
-            <View style={styles.smallBox}>
-              <Text style={styles.label}>WEIGHT</Text>
-              <Text style={styles.value}>{weight} kg</Text>
+            <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>WEIGHT</Text>
+              <Text style={[styles.value, { color: colors.text }]}>{weight} kg</Text>
               <View style={styles.btnRow}>
-                <TouchableOpacity style={styles.circleBtn} onPress={decreaseWeight}>
-                  <Text style={styles.btnText}>-</Text>
+                <TouchableOpacity 
+                  style={[styles.circleBtn, { backgroundColor: colors.surface || '#222' }]} 
+                  onPress={decreaseWeight}
+                >
+                  <Text style={[styles.btnText, { color: colors.primary }]}>-</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.circleBtn} onPress={increaseWeight}>
-                  <Text style={styles.btnText}>+</Text>
+                <TouchableOpacity 
+                  style={[styles.circleBtn, { backgroundColor: colors.surface || '#222' }]} 
+                  onPress={increaseWeight}
+                >
+                  <Text style={[styles.btnText, { color: colors.primary }]}>+</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            <View style={styles.smallBox}>
-              <Text style={styles.label}>AGE</Text>
-              <Text style={styles.value}>{age}</Text>
+            <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>AGE</Text>
+              <Text style={[styles.value, { color: colors.text }]}>{age}</Text>
               <View style={styles.btnRow}>
-                <TouchableOpacity style={styles.circleBtn} onPress={decreaseAge}>
-                  <Text style={styles.btnText}>-</Text>
+                <TouchableOpacity 
+                  style={[styles.circleBtn, { backgroundColor: colors.surface || '#222' }]} 
+                  onPress={decreaseAge}
+                >
+                  <Text style={[styles.btnText, { color: colors.primary }]}>-</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.circleBtn} onPress={increaseAge}>
-                  <Text style={styles.btnText}>+</Text>
+                <TouchableOpacity 
+                  style={[styles.circleBtn, { backgroundColor: colors.surface || '#222' }]} 
+                  onPress={increaseAge}
+                >
+                  <Text style={[styles.btnText, { color: colors.primary }]}>+</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
 
           {/*Butoni i kalkulimit */}
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]}>
             <Text style={styles.buttonText}>Calculate BMI</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -121,15 +150,12 @@ const BMI = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000", // keep background black
   },
   // scroll container: add paddingBottom to avoid footer overlap
   scroll: {
     padding: 20,
-    paddingBottom: 120, // leave space for footer
   },
   title: {
-    color: "#fff",
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
@@ -142,21 +168,17 @@ const styles = StyleSheet.create({
   genderBox: {
     flex: 1,
     margin: 5,
-    backgroundColor: "#333",
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
   },
   activeGender: {
-    borderColor: "#28a745",
     borderWidth: 2,
   },
   genderText: {
-    color: "#fff",
     fontSize: 18,
   },
   sliderBox: {
-    backgroundColor: "#333",
     width: "100%",
     borderRadius: 10,
     marginVertical: 15,
@@ -164,11 +186,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   label: {
-    color: "#aaa",
     fontSize: 14,
   },
   value: {
-    color: "#fff",
     fontSize: 24,
     marginVertical: 10,
   },
@@ -178,7 +198,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   smallBox: {
-    backgroundColor: "#333",
     flex: 1,
     margin: 5,
     borderRadius: 10,
@@ -190,7 +209,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   circleBtn: {
-    backgroundColor: "#222",
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -199,11 +217,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   btnText: {
-    color: "#28a745",
     fontSize: 22,
   },
   button: {
-    backgroundColor: "#28a745",
     padding: 15,
     borderRadius: 10,
     width: "100%",
@@ -217,7 +233,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexShrink: 0,
-    backgroundColor: "transparent", // List likely handles its own bg
+    backgroundColor: "transparent",
   },
 });
 
