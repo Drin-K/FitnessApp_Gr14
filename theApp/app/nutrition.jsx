@@ -14,7 +14,7 @@ const Nutrition = () => {
   const dietGoals = [
     { img: require("../assets/weightloss.png"), name: "Weight Loss", route: "/weightloss" },
     { img: require("../assets/muscle.png"), name: "Muscle Gain", route: "/musclegain" },
-    { img: require("../assets/energy.png"), name: "Daily Energy", route: "/nutrition/energy" },
+    { img: require("../assets/energy.png"), name: "Daily Energy", route: "/Daily_Energy" },
   ];
 
   const recommendedFoods = [
