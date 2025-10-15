@@ -132,10 +132,20 @@ const BMI = () => {
             </View>
           </View>
 
-          {/*Butoni i kalkulimit */}
-          <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]}>
-            <Text style={styles.buttonText}>Calculate BMI</Text>
-          </TouchableOpacity>
+<TouchableOpacity
+  style={[styles.button, { backgroundColor: colors.primary }]}
+  onPress={() => {
+    const bmi = weight / ((height / 100) ** 2);
+router.push({
+  pathname: "/bmiResult", 
+  params: { bmi: bmi.toFixed(1) },
+});
+
+  }}
+>
+  <Text style={styles.buttonText}>Calculate BMI</Text>
+</TouchableOpacity>
+
         </ScrollView>
 
         {/* FIXED footer */}
