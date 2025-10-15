@@ -4,13 +4,12 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking } from "r
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons, FontAwesome, AntDesign } from "@expo/vector-icons";
-import { useTheme } from "../context/ThemeContext"; // Assuming you have a theme context
+import { useTheme } from "../context/ThemeContext"; 
 import List from "../components/list";
 
 const ProfileScreen = () => {
-  const { colors, isDarkMode } = useTheme(); // Using theme context
+  const { colors, isDarkMode } = useTheme(); 
 
-  // Gradient colors based on theme
   const gradientColors = isDarkMode
     ? [colors.background, "#001a10", colors.background]
     : ["#ffffff", "#f0fff8", "#ffffff"];
@@ -69,7 +68,9 @@ const ProfileScreen = () => {
         <View style={{ height: 24 }} />
       </ScrollView>
 
-      <List onNavigate={(p) => router.push(p)} />
+      <View style={{ marginBottom: 0 }}> 
+        <List onNavigate={(p) => router.push(p)} />
+      </View>
     </SafeAreaView>
   );
 };
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 80,
+    marginTop: 50,
   },
   moreLeft: {
     flexDirection: "row",
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   linksRow: {
-    marginTop: 22,
+    marginTop: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 4,
