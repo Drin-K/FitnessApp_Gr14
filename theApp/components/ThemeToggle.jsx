@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, Image, StyleSheet } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
 const ThemeToggle = ({ style }) => {
@@ -18,9 +18,11 @@ const ThemeToggle = ({ style }) => {
       ]}
       activeOpacity={0.8}
     >
-      <Text style={[styles.text, { color: colors.text }]}>
-        {isDarkMode ? "☀️ Light" : "🌙 Dark"}
-      </Text>
+      <Image 
+        source={isDarkMode ? require("../assets/sun.png") : require("../assets/moon.png")}
+        style={styles.icon}
+        resizeMode="contain"
+      />
     </TouchableOpacity>
   );
 };
@@ -40,8 +42,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  text: {
-    fontWeight: "700",
-    fontSize: 12,
+  icon: {
+    width: 20,
+    height: 20,
   },
 });

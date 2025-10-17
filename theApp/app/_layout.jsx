@@ -19,7 +19,7 @@ const LayoutContent = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Stack will render routes (pages) */}
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false, gestureEnabled: false,animation: 'fade',animationDuration:200, }} />
 
       {/* Theme toggle visible on every screen */}
       <ThemeToggle style={toggleStyle} />

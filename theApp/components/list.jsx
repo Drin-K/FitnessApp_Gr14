@@ -5,14 +5,20 @@ import { useTheme } from "../context/ThemeContext";
 
 const List = () => {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme(); // Shtu isDark këtu
 
   return (
     <View style={[
       styles.container, 
       { 
         backgroundColor: colors.surface, 
-        borderTopColor: colors.primary 
+        borderTopColor: isDark ? colors.surface : colors.border,
+        borderTopWidth: isDark ? 0 : 1,
+        elevation: 4,
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
       }
     ]}>
       {/* Home */}
@@ -110,7 +116,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    borderTopWidth: 1,
     paddingVertical: 10,
     position: "absolute",
     bottom: 0,
