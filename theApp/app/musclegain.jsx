@@ -6,7 +6,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 
 const { width } = Dimensions.get('window');
-
 const mealPlans = {
   Beginner: {
     image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400",
@@ -54,11 +53,6 @@ const MuscleGain = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 1000,
-        useNativeDriver: true,
-      }).start();
     }, 5000);
 
     Animated.spring(scaleAnim, {
