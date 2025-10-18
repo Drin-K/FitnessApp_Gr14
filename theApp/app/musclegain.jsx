@@ -338,32 +338,32 @@ const styles = StyleSheet.create({
   flexDirection: "row", 
   justifyContent: "space-between", 
   marginBottom: 25,
-  minHeight: 50, // Add minimum height
+  minHeight: 50, 
 },
 
-// In your planButton styles, modify:
+
 planButton: { 
-  paddingVertical: 10, // Reduce vertical padding
-  paddingHorizontal: 8, // Reduce horizontal padding
+  paddingVertical: 10, 
+  paddingHorizontal: 8, 
   borderRadius: 25, 
   borderWidth: 1, 
   flex: 1,
-  marginHorizontal: 4, // Reduce margin
+  marginHorizontal: 4, 
   alignItems: 'center',
-  justifyContent: 'center', // Ensure content is centered
-  minWidth: 0, // Important for flex items to shrink properly
+  justifyContent: 'center',
+  minWidth: 0, 
 },
 
-// In your planButtonText styles, modify:
+
 planButtonText: { 
   fontWeight: "700", 
-  fontSize: 12, // Reduce font size slightly
+  fontSize: 12, 
   textAlign: 'center',
-  flexShrink: 1, // Allow text to shrink if needed
+  flexShrink: 1, 
 },
 planButtonTextActive: {
   fontWeight: "800",
-  fontSize: 12, // Ensure consistent size
+  fontSize: 12,
 },
 
   planCard: {
