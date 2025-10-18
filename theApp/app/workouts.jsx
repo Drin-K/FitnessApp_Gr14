@@ -17,7 +17,7 @@ import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 import WorkoutCard from "../components/WorkoutCard";
 import * as ImagePicker from "expo-image-picker";
-import List from "../components/list";
+import List from "../components/List";
 
 const initialWorkouts = [
   {

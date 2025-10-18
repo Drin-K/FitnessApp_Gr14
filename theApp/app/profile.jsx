@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
 import { useRouter } from "expo-router";
-import List from "../components/list";
+import List from "../components/List";
 
 const ProfileScreen = () => {
   const { colors, isDarkMode } = useTheme();

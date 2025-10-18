@@ -11,7 +11,7 @@ import {
 import { useTheme } from "../context/ThemeContext";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import List from "../components/list";
+import List from "../components/List";
 
 const Index = () => {
   const router = useRouter();

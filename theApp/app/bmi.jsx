@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
-import List from "../components/list";
+import List from "../components/List";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 
@@ -137,7 +137,7 @@ const BMI = () => {
   onPress={() => {
     const bmi = weight / ((height / 100) ** 2);
 router.push({
-  pathname: "/bmiResult", 
+  pathname: "/components/BmiResult", 
   params: { bmi: bmi.toFixed(1) },
 });
 

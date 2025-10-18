@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
-import List from "../components/list";
+import List from "../components/List";
 import NutritionItem from "../components/NutritionItem";
 
 const Nutrition = () => {
@@ -14,7 +14,7 @@ const Nutrition = () => {
   const dietGoals = [
     { img: require("../assets/weightloss.png"), name: "Weight Loss", route: "/weightloss" },
     { img: require("../assets/muscle.png"), name: "Muscle Gain", route: "/musclegain" },
-    { img: require("../assets/energy.png"), name: "Daily Energy", route: "/Daily_Energy" },
+    { img: require("../assets/energy.png"), name: "Daily Energy", route: "/dailyenergy" },
   ];
 
   const recommendedFoods = [
