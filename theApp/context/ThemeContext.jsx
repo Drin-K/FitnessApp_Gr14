@@ -4,7 +4,7 @@ import { COLORS } from '../constants/Theme';
 
 const ThemeContext = createContext();
 
-export const ThemeProvider = ({ children }) => {
+export const ThemeProvider = (props) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const toggleTheme = () => {
@@ -14,11 +14,14 @@ export const ThemeProvider = ({ children }) => {
   const colors = isDarkMode ? COLORS.dark : COLORS.light;
 
   return (
-    <ThemeContext.Provider value={{ colors, toggleTheme, isDarkMode }}>
-      {children}
+    <ThemeContext.Provider
+      value={{ colors, toggleTheme, isDarkMode }}
+    >
+      {props.children}
     </ThemeContext.Provider>
   );
 };
+
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
