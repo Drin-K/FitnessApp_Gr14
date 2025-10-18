@@ -7,7 +7,7 @@
 ## 👥 Group Members
 - **Drin Kurti**  
 - **Bardh Tahiri**  
-- **Mehmet Mehmeti**
+- **Mehmet Mehmeti**  
 - **Dion Haradinaj**  
 - **Albin Bujupi**  
 - **Enes Spahiu**
@@ -51,36 +51,36 @@ The app demonstrates the use of essential React Native and Expo components, incl
 
 ## 📁 Project Structure
 
-theApp/
-├── app/
-│ ├── _layout.jsx
-│ ├── bmi.jsx
-│ ├── dailyenergy.jsx
-│ ├── index.jsx
-│ ├── login.jsx
-│ ├── musclegain.jsx
-│ ├── nutrition.jsx
-│ ├── profile.jsx
-│ ├── signup.jsx
-│ ├── weightloss.jsx
-│ └── workouts.jsx
-│ 
-├── components/
-│ ├── BmiResult.jsx
-│ ├── InputField.jsx
-│ ├── List.jsx
-│ ├── NutritionItem.jsx
-│ ├── ThemeToggle.jsx
-│ └── WorkoutCard.jsx
-│
-├── assets/
-├── context/
-│ └── ThemeContext.jsx
-│
-|
-├── app.json
-├── package.json
-└── README.md
+- **app/** → Contains the main screens of the application:
+  - `_layout.jsx`
+  - `bmi.jsx`
+  - `dailyenergy.jsx`
+  - `index.jsx`
+  - `login.jsx`
+  - `musclegain.jsx`
+  - `nutrition.jsx`
+  - `profile.jsx`
+  - `signup.jsx`
+  - `weightloss.jsx`
+  - `workouts.jsx`
+
+- **components/** → Contains reusable UI components:
+  - `BmiResult.jsx`
+  - `InputField.jsx`
+  - `List.jsx`
+  - `NutritionItem.jsx`
+  - `ThemeToggle.jsx`
+  - `WorkoutCard.jsx`
+
+- **assets/** → Contains static resources such as images and icons.
+
+- **context/** → Contains the app’s global state management:
+  - `ThemeContext.jsx`
+
+- **root files:**
+  - `app.json`
+  - `package.json`
+  - `README.md`
 
 ---
 
