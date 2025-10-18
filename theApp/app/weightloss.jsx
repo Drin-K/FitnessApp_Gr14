@@ -324,33 +324,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  buttonContainer: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    marginBottom: 25,
-  },
-  planButton: { 
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25, 
-    borderWidth: 1, 
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  planButtonActive: {
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  planButtonText: { 
-    fontWeight: "700", 
-    fontSize: 14,
-  },
-  planButtonTextActive: {
-    fontWeight: "800",
-  },
+  // In your buttonContainer styles, add:
+buttonContainer: { 
+  flexDirection: "row", 
+  justifyContent: "space-between", 
+  marginBottom: 25,
+  minHeight: 50, // Add minimum height
+},
+
+// In your planButton styles, modify:
+planButton: { 
+  paddingVertical: 10, // Reduce vertical padding
+  paddingHorizontal: 8, // Reduce horizontal padding
+  borderRadius: 25, 
+  borderWidth: 1, 
+  flex: 1,
+  marginHorizontal: 4, // Reduce margin
+  alignItems: 'center',
+  justifyContent: 'center', // Ensure content is centered
+  minWidth: 0, // Important for flex items to shrink properly
+},
+
+// In your planButtonText styles, modify:
+planButtonText: { 
+  fontWeight: "700", 
+  fontSize: 12, // Reduce font size slightly
+  textAlign: 'center',
+  flexShrink: 1, // Allow text to shrink if needed
+},
+planButtonTextActive: {
+  fontWeight: "800",
+  fontSize: 12, // Ensure consistent size
+},
 
   planCard: {
     height: 200,
