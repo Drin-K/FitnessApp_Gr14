@@ -6,7 +6,7 @@ import ThemeToggle from "../components/ThemeToggle";
 
 // LayoutContent uses the theme hook; ThemeProvider must wrap it
 const LayoutContent = () => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   // Top-right toggle styling
   const toggleStyle = {

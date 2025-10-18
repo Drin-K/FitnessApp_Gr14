@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, ScrollView, StyleSheet, Animated, Image, TouchableOpacity, Dimensions } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Animated, Image, TouchableOpacity} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
-
-const { width } = Dimensions.get('window');
 
 const energyPlans = {
   "Low Energy": {
