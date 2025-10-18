@@ -1,8 +1,18 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Platform } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  StatusBar,
+  Platform,
+  TextInput,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import List from "../components/List";
+import BmiResult from "../components/BmiResult";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 
@@ -12,53 +22,67 @@ const BMI = () => {
 
   const [gender, setGender] = useState(null);
   const [height, setHeight] = useState(167);
-  const [weight, setWeight] = useState(60);
-  const [age, setAge] = useState(20);
+  const [weight, setWeight] = useState("60");
+  const [age, setAge] = useState("20");
+  const [bmi, setBmi] = useState(null);
+  const [showResult, setShowResult] = useState(false);
 
-  const decreaseAge = () => {
-    if (age > 13) setAge(age - 1);
+  const handleCalculate = () => {
+    const w = parseFloat(weight);
+    const h = parseFloat(height);
+    if (isNaN(w) || isNaN(h) || h <= 0) return;
+    const bmiValue = w / ((h / 100) ** 2);
+    setBmi(bmiValue.toFixed(1));
+    setShowResult(true);
   };
 
-  const increaseAge = () => {
-    if (age < 100) setAge(age + 1);
+  const handleRecalculate = () => {
+    setShowResult(false);
   };
 
-  const decreaseWeight = () => {
-    if (weight > 30) setWeight(weight - 1);
-  };
+  // Nëse kemi rezultat, shfaq BmiResult komponentin
+  if (showResult && bmi) {
+    return (
+      <BmiResult 
+        bmi={bmi} 
+        onRecalculate={handleRecalculate}
+        colors={colors}
+        isDarkMode={isDarkMode}
+      />
+    );
+  }
 
-  const increaseWeight = () => {
-    if (weight < 200) setWeight(weight + 1);
-  };
-
+  // Kalkulatori normal
   return (
     <SafeAreaView
       style={[
         styles.container,
-        { 
+        {
           backgroundColor: colors.background,
           paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
         },
       ]}
     >
-      <StatusBar 
+      <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
-        translucent={false} 
+        translucent={false}
       />
-      
-      {/* main area fills screen so footer can stay fixed */}
-      <View style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]} showsVerticalScrollIndicator={false}>
+
+      <View style={{ flex: 1, marginTop:45 }}>
+        <ScrollView
+          contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={[styles.title, { color: colors.text }]}>BMI Calculator</Text>
 
-          {/* Selektimi i Gjinise */}
+          {/* Gender Selection */}
           <View style={styles.genderContainer}>
             <TouchableOpacity
               style={[
-                styles.genderBox, 
+                styles.genderBox,
                 { backgroundColor: colors.card },
-                gender === "male" && [styles.activeGender, { borderColor: colors.primary }]
+                gender === "male" && [styles.activeGender, { borderColor: colors.primary }],
               ]}
               onPress={() => setGender("male")}
             >
@@ -66,9 +90,9 @@ const BMI = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[
-                styles.genderBox, 
+                styles.genderBox,
                 { backgroundColor: colors.card },
-                gender === "female" && [styles.activeGender, { borderColor: colors.primary }]
+                gender === "female" && [styles.activeGender, { borderColor: colors.primary }],
               ]}
               onPress={() => setGender("female")}
             >
@@ -76,7 +100,7 @@ const BMI = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Gjatsia slider */}
+          {/* Height Slider */}
           <View style={[styles.sliderBox, { backgroundColor: colors.card }]}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>HEIGHT</Text>
             <Text style={[styles.value, { color: colors.text }]}>{height} cm</Text>
@@ -91,64 +115,45 @@ const BMI = () => {
             />
           </View>
 
-          {/* Weight & Age boxes */}
+          {/* Weight & Age Inputs */}
           <View style={styles.rowBox}>
             <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>WEIGHT</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{weight} kg</Text>
-              <View style={styles.btnRow}>
-                <TouchableOpacity 
-                  style={[styles.circleBtn, { backgroundColor: colors.surface || '#222' }]} 
-                  onPress={decreaseWeight}
-                >
-                  <Text style={[styles.btnText, { color: colors.primary }]}>-</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.circleBtn, { backgroundColor: colors.surface || '#222' }]} 
-                  onPress={increaseWeight}
-                >
-                  <Text style={[styles.btnText, { color: colors.primary }]}>+</Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>WEIGHT (kg)</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  { color: colors.text, borderColor: colors.primary },
+                ]}
+                keyboardType="numeric"
+                value={weight}
+                onChangeText={setWeight}
+              />
             </View>
 
             <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>AGE</Text>
-              <Text style={[styles.value, { color: colors.text }]}>{age}</Text>
-              <View style={styles.btnRow}>
-                <TouchableOpacity 
-                  style={[styles.circleBtn, { backgroundColor: colors.surface || '#222' }]} 
-                  onPress={decreaseAge}
-                >
-                  <Text style={[styles.btnText, { color: colors.primary }]}>-</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.circleBtn, { backgroundColor: colors.surface || '#222' }]} 
-                  onPress={increaseAge}
-                >
-                  <Text style={[styles.btnText, { color: colors.primary }]}>+</Text>
-                </TouchableOpacity>
-              </View>
+              <TextInput
+                style={[
+                  styles.input,
+                  { color: colors.text, borderColor: colors.primary },
+                ]}
+                keyboardType="numeric"
+                value={age}
+                onChangeText={setAge}
+              />
             </View>
           </View>
 
-<TouchableOpacity
-  style={[styles.button, { backgroundColor: colors.primary }]}
-  onPress={() => {
-    const bmi = weight / ((height / 100) ** 2);
-router.push({
-  pathname: "/components/BmiResult", 
-  params: { bmi: bmi.toFixed(1) },
-});
-
-  }}
->
-  <Text style={styles.buttonText}>Calculate BMI</Text>
-</TouchableOpacity>
-
+          {/* Calculate Button */}
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.primary }]}
+            onPress={handleCalculate}
+          >
+            <Text style={styles.buttonText}>Calculate BMI</Text>
+          </TouchableOpacity>
         </ScrollView>
 
-        {/* FIXED footer */}
+        {/* Footer */}
         <View style={styles.footer}>
           <List onNavigate={(p) => router.push(p)} />
         </View>
@@ -161,7 +166,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // scroll container: add paddingBottom to avoid footer overlap
   scroll: {
     padding: 20,
   },
@@ -214,20 +218,14 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
   },
-  btnRow: {
-    flexDirection: "row",
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    width: "80%",
+    textAlign: "center",
+    fontSize: 20,
+    paddingVertical: 5,
     marginTop: 10,
-  },
-  circleBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 5,
-  },
-  btnText: {
-    fontSize: 22,
   },
   button: {
     padding: 15,
