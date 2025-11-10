@@ -1,105 +1,111 @@
 import React from "react";
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Image 
-} from "react-native";
+import { View, Text, ScrollView, StyleSheet} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 import List from "../components/List";
+import NutritionItem from "../components/NutritionItem";
 
 const Nutrition = () => {
   const router = useRouter();
   const { colors, isDarkMode } = useTheme();
 
-  const handleSave = (goal) => {
-    console.log("Saving:", goal.name);
-    // Later: add your Firebase save logic
-  };
-
   const dietGoals = [
-    { 
-      img: require("../assets/weightloss.png"), 
-      name: "Weight Loss", 
-      route: "/weightloss",
-      calories: "1500–1700 kcal/day"
-    },
-    { 
-      img: require("../assets/muscle.png"), 
-      name: "Muscle Gain", 
-      route: "/musclegain",
-      calories: "2500–3000 kcal/day"
-    },
-    { 
-      img: require("../assets/energy.png"), 
-      name: "Daily Energy", 
-      route: "/dailyenergy",
-      calories: "2000–2200 kcal/day"
-    },
+    { img: require("../assets/weightloss.png"), name: "Weight Loss", route: "/weightloss" },
+    { img: require("../assets/muscle.png"), name: "Muscle Gain", route: "/musclegain" },
+    { img: require("../assets/energy.png"), name: "Daily Energy", route: "/dailyenergy" },
   ];
 
+  const recommendedFoods = [
+    { img: require("../assets/oatmeal.png"), name: "Oatmeal", desc: "High in fiber & keeps you full." },
+    { img: require("../assets/chicken.png"), name: "Grilled Chicken", desc: "Rich in protein and low in fat." },
+    { img: require("../assets/avocado.png"), name: "Avocado", desc: "Healthy fats for energy." },
+  ];
+
+  const nutritionTips = [
+    "Stay hydrated — drink 2-3L water daily.",
+    "Eat every 3–4 hours to maintain energy.",
+    "Include fruits & veggies in each meal.",
+    "Avoid sugary drinks and processed foods.",
+  ];
+
+  // Gradient colors based on theme
   const gradientColors = isDarkMode 
     ? [colors.background, "#001a10", colors.background]
     : ["#ffffff", "#f0fff8", "#ffffff"];
 
+  const tipsGradientColors = isDarkMode
+    ? ["#002b1a", "#001a10"]
+    : ["#e8f5e8", "#d0ebd0"];
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient colors={gradientColors} style={styles.bg}>
-
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-
+        <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={[styles.title, { color: colors.primary }]}>Nutrition Plans</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Choose your goal and follow a balanced diet.
           </Text>
 
-          <View style={styles.verticalContainer}>
-            {dietGoals.map((goal, i) => (
-              <View key={i} style={styles.bannerCardWrapper}>
-                
-                {/* SAVE BUTTON IN THE CORNER */}
-                <TouchableOpacity
-                  style={[styles.cardSaveButton, { backgroundColor: colors.primary }]}
-                  onPress={() => handleSave(goal)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.saveIcon}>★</Text>
-                </TouchableOpacity>
-
-                {/* FULL CARD PRESS */}
-                <TouchableOpacity
-                  style={styles.bannerCard}
+          {/* Diet Goals */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>
+              Select Your Goal
+            </Text>
+            <View style={styles.cardRow}>
+              {dietGoals.map((goal, i) => (
+                <NutritionItem
+                  key={i}
+                  img={goal.img}
+                  name={goal.name}
                   onPress={() => router.push(goal.route)}
-                  activeOpacity={0.90}
-                >
-                  <Image source={goal.img} style={styles.bannerImage} />
-
-                  <View style={styles.overlay} />
-
-                  <View style={styles.bannerTextBlock}>
-                    <Text style={[styles.bannerTitle, { color: "#ffffff" }]}>
-                      {goal.name}
-                    </Text>
-
-                    <Text style={styles.bannerCalories}>
-                      {goal.calories}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            ))}
+                />
+              ))}
+            </View>
           </View>
 
-          <View style={{ height: 120 }} />
+          {/* Recommended Foods */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>
+              Recommended Foods
+            </Text>
+            <View style={styles.cardRow}>
+              {recommendedFoods.map((food, i) => (
+                <NutritionItem 
+                  key={i} 
+                  img={food.img} 
+                  name={food.name} 
+                  desc={food.desc} 
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Nutrition Tips */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>
+              Nutrition Tips
+            </Text>
+            <LinearGradient 
+              colors={tipsGradientColors} 
+              style={[
+                styles.tips, 
+                { borderColor: colors.primary }
+              ]}
+            >
+              {nutritionTips.map((tip, i) => (
+                <Text key={i} style={[styles.tip, { color: colors.textSecondary }]}>
+                  • {tip}
+                </Text>
+              ))}
+            </LinearGradient>
+          </View>
+
+          <View style={{ height: 140 }} />
         </ScrollView>
 
         <List onNavigate={(p) => router.push(p)} />
-
       </LinearGradient>
     </SafeAreaView>
   );
@@ -108,109 +114,50 @@ const Nutrition = () => {
 export default Nutrition;
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  bg: { flex: 1 },
-
-  scroll: {
-    padding: 22,
-    paddingTop: 10,
+  container: { 
+    flex: 1,
   },
-
-  title: {
-    fontSize: 32,
-    fontWeight: "900",
-    textAlign: "center",
-    marginTop: 10,
-    marginBottom: 6,
-    letterSpacing: 1,
+  bg: { 
+    flex: 1 
   },
-
-  subtitle: {
-    textAlign: "center",
-    marginBottom: 30,
-    fontSize: 14,
+  scroll: { 
+    padding: 20 
   },
-
-  verticalContainer: {
-    width: "100%",
-    gap: 30,
+  title: { 
+    fontSize: 32, 
+    fontWeight: "900", 
+    textAlign: "center", 
+    marginTop: 10, 
+    marginBottom: 6, 
+    letterSpacing: 1 
   },
-
-  /* WRAPPER FOR CARD + SAVE BUTTON */
-  bannerCardWrapper: {
-    width: "100%",
-    position: "relative",
+  subtitle: { 
+    textAlign: "center", 
+    marginBottom: 25, 
+    fontSize: 14 
   },
-
-  /* SAVE BUTTON TOP-RIGHT */
-  cardSaveButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 6,
+  section: { 
+    marginBottom: 30 
   },
-
-  saveIcon: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "900",
+  sectionTitle: { 
+    fontSize: 20, 
+    fontWeight: "700", 
+    marginBottom: 12, 
+    textShadowOffset: { width: 1, height: 1 }, 
+    textShadowRadius: 4 
   },
-
-  /* CARD DESIGN */
-  bannerCard: {
-    width: "100%",
-    height: 200,
-    borderRadius: 20,
-    overflow: "hidden",
-    backgroundColor: "#000",
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 10,
+  cardRow: { 
+    flexDirection: "row", 
+    justifyContent: "space-between" 
   },
-
-  bannerImage: {
-    width: "100%",
-    height: "100%",
-    position: "absolute",
-    borderRadius: 20,
+  tips: { 
+    borderRadius: 14, 
+    padding: 16, 
+    borderWidth: 1 
   },
-
-  overlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "45%",
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
-
-  bannerTextBlock: {
-    position: "absolute",
-    bottom: 12,
-    left: 16,
-  },
-
-  bannerTitle: {
-    fontSize: 22,
-    fontWeight: "900",
-    marginBottom: 2,
-  },
-
-  bannerCalories: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#eaeaea",
+  tip: { 
+    fontSize: 13, 
+    marginBottom: 6, 
+    lineHeight: 20 
   },
 });

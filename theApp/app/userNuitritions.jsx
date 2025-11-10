@@ -17,6 +17,11 @@ const Nutrition = () => {
   const router = useRouter();
   const { colors, isDarkMode } = useTheme();
 
+  const handleSave = (goal) => {
+    console.log("Saving:", goal.name);
+    // Later: add your Firebase save logic
+  };
+
   const dietGoals = [
     { 
       img: require("../assets/weightloss.png"), 
@@ -55,28 +60,38 @@ const Nutrition = () => {
 
           <View style={styles.verticalContainer}>
             {dietGoals.map((goal, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.bannerCard}
-                onPress={() => router.push(goal.route)}
-                activeOpacity={0.90}
-              >
-                <Image source={goal.img} style={styles.bannerImage} />
+              <View key={i} style={styles.bannerCardWrapper}>
+                
+                {/* SAVE BUTTON IN THE CORNER */}
+                <TouchableOpacity
+                  style={[styles.cardSaveButton, { backgroundColor: colors.primary }]}
+                  onPress={() => handleSave(goal)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.saveIcon}>★</Text>
+                </TouchableOpacity>
 
-                {/* Dark gradient overlay */}
-                <View style={styles.overlay} />
+                {/* FULL CARD PRESS */}
+                <TouchableOpacity
+                  style={styles.bannerCard}
+                  onPress={() => router.push(goal.route)}
+                  activeOpacity={0.90}
+                >
+                  <Image source={goal.img} style={styles.bannerImage} />
 
-                {/* Text block */}
-                <View style={styles.bannerTextBlock}>
-                  <Text style={[styles.bannerTitle, { color: "#ffffff" }]}>
-                    {goal.name}
-                  </Text>
+                  <View style={styles.overlay} />
 
-                  <Text style={styles.bannerCalories}>
-                    {goal.calories}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+                  <View style={styles.bannerTextBlock}>
+                    <Text style={[styles.bannerTitle, { color: "#ffffff" }]}>
+                      {goal.name}
+                    </Text>
+
+                    <Text style={styles.bannerCalories}>
+                      {goal.calories}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
             ))}
           </View>
 
@@ -118,17 +133,46 @@ const styles = StyleSheet.create({
 
   verticalContainer: {
     width: "100%",
-    gap: 22,
+    gap: 30,
   },
 
-  // NEW FULL-IMAGE CARD STYLE
+  /* WRAPPER FOR CARD + SAVE BUTTON */
+  bannerCardWrapper: {
+    width: "100%",
+    position: "relative",
+  },
+
+  /* SAVE BUTTON TOP-RIGHT */
+  cardSaveButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 6,
+  },
+
+  saveIcon: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "900",
+  },
+
+  /* CARD DESIGN */
   bannerCard: {
     width: "100%",
     height: 200,
     borderRadius: 20,
     overflow: "hidden",
     backgroundColor: "#000",
-
     shadowColor: "#000",
     shadowOpacity: 0.25,
     shadowRadius: 14,
