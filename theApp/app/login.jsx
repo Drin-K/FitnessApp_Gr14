@@ -24,7 +24,7 @@ const LoginScreen = () => {
   const result = await loginUser(email, password);
   if (result.success) {
     Alert.alert("Sukses", "Jeni kyçur me sukses!");
-    router.push("/index"); // ose "/dashboard" nëse ke emër tjetër për faqen kryesore
+    router.push("/"); // ose "/dashboard" nëse ke emër tjetër për faqen kryesore
   } else {
     Alert.alert("Gabim", result.message);
   }

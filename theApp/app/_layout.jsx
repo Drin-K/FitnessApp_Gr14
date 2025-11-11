@@ -18,7 +18,7 @@ const LayoutContent = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         console.log("✅ User aktiv:", user.email);
-        router.replace("/index"); // nëse user ekziston → dërgo në home
+        router.replace("/"); // nëse user ekziston → dërgo në home
       } else {
         console.log("🚪 Asnjë user i kyçur");
         router.replace("/login"); // nëse jo → dërgo në login
