@@ -6,12 +6,15 @@ import ThemeToggle from "../components/ThemeToggle";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 
+
 const LayoutContent = () => {
   const { colors } = useTheme();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+          setLoading(false);
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         console.log("✅ User aktiv:", user.email);
@@ -20,7 +23,6 @@ const LayoutContent = () => {
         console.log("🚪 Asnjë user i kyçur");
         router.replace("/login"); // nëse jo → dërgo në login
       }
-      setLoading(false);
     });
 
     return unsubscribe; // pastron listener-in kur komponenti mbyllet

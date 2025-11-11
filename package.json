@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "firebase": "^12.5.0"
+    "expo": "^54.0.23",
+    "expo-constants": "^18.0.10",
+    "expo-router": "^6.0.14",
+    "firebase": "^12.5.0",
+    "react-native": "^0.81.5"
   }
 }
