@@ -6,6 +6,8 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import List from "../components/List";
 import { useTheme } from "../context/ThemeContext";
+import { loginUser } from "../services/authService";
+import { Alert } from "react-native";
 
 const LoginScreen = () => {
   const { colors, isDarkMode } = useTheme();
@@ -13,9 +15,21 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  const handleLogin = () => {
-    console.log("Login with:", email, password);
-  };
+ const handleLogin = async () => {
+  if (!email || !password) {
+    Alert.alert("Gabim", "Ju lutem plotësoni emailin dhe fjalëkalimin");
+    return;
+  }
+
+  const result = await loginUser(email, password);
+  if (result.success) {
+    Alert.alert("Sukses", "Jeni kyçur me sukses!");
+    router.push("/index"); // ose "/dashboard" nëse ke emër tjetër për faqen kryesore
+  } else {
+    Alert.alert("Gabim", result.message);
+  }
+};
+
 
   // Gradient colors based on theme
   const gradientColors = isDarkMode 
