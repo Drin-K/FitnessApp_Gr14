@@ -1,32 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Platform, ActivityIndicator } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import React from "react";
+import { View, StyleSheet, Platform } from "react-native";
+import { Stack } from "expo-router";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase";
-
+import { ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
 
 const LayoutContent = () => {
   const { colors } = useTheme();
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-          setLoading(false);
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+  // 🔁 Kontrollo statusin e përdoruesit për routing
+  React.useEffect(() => {
+    if (!loading) {
       if (user) {
-        console.log("✅ User aktiv:", user.email);
-        router.replace("/"); // nëse user ekziston → dërgo në home
+        router.replace("/"); // nëse është i kyçur → Home
       } else {
-        console.log("🚪 Asnjë user i kyçur");
-        router.replace("/login"); // nëse jo → dërgo në login
+        router.replace("/login"); // nëse s’është → Login
       }
-    });
-
-    return unsubscribe; // pastron listener-in kur komponenti mbyllet
-  }, []);
+    }
+  }, [user, loading]);
 
   if (loading) {
     return (
@@ -45,27 +40,18 @@ const LayoutContent = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Stack që renderon të gjitha faqet */}
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          gestureEnabled: false,
-          animation: "fade",
-          animationDuration: 200,
-        }}
-      />
-
-      {/* Butoni i ndërrimit të temës, i dukshëm në çdo ekran */}
+      <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
       <ThemeToggle style={toggleStyle} />
     </View>
   );
 };
 
-// ✅ Layout kryesor që mbështjell aplikacionin me ThemeProvider
 export default function Layout() {
   return (
     <ThemeProvider>
-      <LayoutContent />
+      <AuthProvider>
+        <LayoutContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
