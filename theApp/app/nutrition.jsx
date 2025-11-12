@@ -69,21 +69,28 @@ const Nutrition = () => {
   }, []);
 
   // Handle saving nutrition goal (for logged-in users)
-  const handleSave = async (goal) => {
-    if (!user) return;
-    
-    try {
-      await saveNutritionGoal(user.uid, {
-        name: goal.name,
-        calories: goal.calories,
-        img: goal.img,
-      });
-      Alert.alert("Saved!", `${goal.name} added to your plans ✅`);
-    } catch (e) {
-      console.log(e);
-      Alert.alert("Error", "Could not save nutrition plan.");
-    }
-  };
+  const [activeGoal, setActiveGoal] = useState(null);
+
+const handleSave = async (goal) => {
+  if (!user) return;
+
+  try {
+    const savedGoal = await saveNutritionGoal(user.uid, {
+      name: goal.name,
+      calories: goal.calories,
+      img: goal.img,
+    });
+
+    setActiveGoal(savedGoal); // ✅ show only the saved one
+    Alert.alert("Saved!", `${goal.name} set as your active plan ✅`);
+  } catch (e) {
+    console.log(e);
+    Alert.alert("Error", "Could not save nutrition plan.");
+  }
+};
+
+
+
 
   // Common data
   const dietGoals = [
@@ -159,7 +166,7 @@ const Nutrition = () => {
                   Select Your Goal
                 </Text>
                 <View style={styles.cardRow}>
-                  {dietGoals.map((goal, i) => (
+                  {(activeGoal ? [activeGoal] : dietGoals).map((goal, i) => (
                     <NutritionItem
                       key={i}
                       img={goal.img}
