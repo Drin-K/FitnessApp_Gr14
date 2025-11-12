@@ -12,15 +12,32 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
 import List from "../components/List";
+import { saveNutritionGoal } from "../services/nutritionsService";
+import { useAuth } from "../context/AuthContext";
+import { Alert } from "react-native";
 
 const Nutrition = () => {
   const router = useRouter();
   const { colors, isDarkMode } = useTheme();
 
-  const handleSave = (goal) => {
-    console.log("Saving:", goal.name);
-    // Later: add your Firebase save logic
-  };
+  
+
+const { user } = useAuth();
+
+const handleSave = async (goal) => {
+  try {
+    await saveNutritionGoal(user.uid, {
+      name: goal.name,
+      calories: goal.calories,
+      img: goal.img, // optional
+    });
+
+    Alert.alert("Saved!", `${goal.name} added to your plans ✅`);
+  } catch (e) {
+    console.log(e);
+    Alert.alert("Error", "Could not save nutrition plan.");
+  }
+};
 
   const dietGoals = [
     { 
