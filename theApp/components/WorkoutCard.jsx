@@ -1,9 +1,15 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
 
-const WorkoutCard = ({ title, duration, functionality, image }) => {
+const WorkoutCard = ({ title, duration, functionality, image, onEdit }) => {
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.85}>
+    <View style={styles.card}>
+      {/* ✏️ Ikona Edit lart majtas */}
+      <TouchableOpacity style={styles.editIcon} onPress={onEdit}>
+        <Icon name="pencil" size={18} color="#fff" />
+      </TouchableOpacity>
+
       <Image source={image} style={styles.image} resizeMode="cover" />
 
       <View style={styles.info}>
@@ -11,7 +17,7 @@ const WorkoutCard = ({ title, duration, functionality, image }) => {
         <Text style={styles.duration}>⏱ {duration}</Text>
         <Text style={styles.functionality}>{functionality}</Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -28,6 +34,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 5,
+    position: "relative",
   },
   image: {
     width: "100%",
@@ -50,5 +57,15 @@ const styles = StyleSheet.create({
     color: "#9fbfaa",
     fontSize: 13,
     marginTop: 6,
+  },
+  editIcon: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#00ff88",
+    padding: 6,
+    borderRadius: 20,
+    zIndex: 10,
+    elevation: 5,
   },
 });

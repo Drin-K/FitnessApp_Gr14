@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   TextInput,
   Image,
   Alert,
-  ScrollView
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -18,7 +19,10 @@ import { useTheme } from "../context/ThemeContext";
 import WorkoutCard from "../components/WorkoutCard";
 import * as ImagePicker from "expo-image-picker";
 import List from "../components/List";
+import { auth } from "../firebase";
+import { saveWorkout, getWorkouts, deleteWorkout } from "../services/workoutService";
 
+// ✅ Default workouts
 const initialWorkouts = [
   {
     id: "1",
@@ -76,52 +80,171 @@ const Workouts = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState("Workouts");
   const [workouts, setWorkouts] = useState(initialWorkouts);
+  const [loading, setLoading] = useState(false);
 
-  // Custom workout form state
+  // Form state
   const [customTitle, setCustomTitle] = useState("");
   const [customDuration, setCustomDuration] = useState("");
   const [customDescription, setCustomDescription] = useState("");
   const [customRoutine, setCustomRoutine] = useState("");
   const [image, setImage] = useState(null);
+  const [base64Image, setBase64Image] = useState(null);
+  const [editingWorkoutId, setEditingWorkoutId] = useState(null);
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  const toggleExpand = (id) => setExpandedId(expandedId === id ? null : id);
 
+  // 📸 Pick image (base64)
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (result.canceled) return;
+      const asset = result.assets?.[0];
+      if (!asset?.uri) return;
+
+      setImage(asset.uri);
+      if (asset.base64) setBase64Image(asset.base64);
+    } catch (error) {
+      console.error("❌ Error in pickImage:", error);
+      Alert.alert("Error", "Failed to pick image. Try again.");
     }
   };
 
-  const handleAddCustom = () => {
+  // 🔥 Fetch workouts
+  useEffect(() => {
+    const fetchWorkouts = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      setLoading(true);
+      try {
+        const data = await getWorkouts(user.uid);
+        setWorkouts([...initialWorkouts, ...data]);
+      } catch (err) {
+        console.error("Error fetching workouts:", err);
+      }
+      setLoading(false);
+    };
+    fetchWorkouts();
+  }, []);
+
+  // ✏️ Handle Edit
+  const handleEditWorkout = (workout) => {
+    setEditingWorkoutId(workout.id);
+    setCustomTitle(workout.title);
+    setCustomDuration(workout.duration);
+    setCustomDescription(workout.functionality);
+    setCustomRoutine(workout.routine.join("\n"));
+
+    if (workout.imageBase64) {
+      setBase64Image(workout.imageBase64);
+      setImage(`data:image/jpeg;base64,${workout.imageBase64}`);
+    } else if (typeof workout.image === "string") {
+      setImage(workout.image);
+    } else {
+      setImage(null);
+    }
+
+    setActiveTab("Custom");
+  };
+
+  // 💾 Add or Update
+  const handleAddOrUpdate = async () => {
     if (!customTitle.trim() || !customRoutine.trim())
       return Alert.alert("Error", "Please fill all fields.");
 
-    const newWorkout = {
-      id: (workouts.length + 1).toString(),
-      title: customTitle,
-      duration: customDuration || "30 min",
-      functionality: customDescription,
-      image: image ? { uri: image } : require("../assets/images/workout1.jpg"),
-      routine: customRoutine.split("\n").filter((r) => r.trim() !== ""),
-    };
+    const user = auth.currentUser;
+    if (!user) return Alert.alert("Error", "You must be logged in.");
 
-    setWorkouts([...workouts, newWorkout]);
-    setCustomTitle("");
-    setCustomDuration("");
-    setCustomRoutine("");
-    setCustomDescription("");
-    setImage(null);
-    setActiveTab("Workouts");
-    Alert.alert("Success", "✅ Workout added successfully");
+    try {
+      const workoutData = {
+        title: customTitle,
+        duration: customDuration || "30 min",
+        functionality: customDescription,
+        imageBase64: base64Image,
+        routine: customRoutine.split("\n").filter((r) => r.trim() !== ""),
+      };
+
+      if (editingWorkoutId) {
+        const updatedList = workouts.map((w) =>
+          w.id === editingWorkoutId ? { ...w, ...workoutData } : w
+        );
+        setWorkouts(updatedList);
+        await saveWorkout(user.uid, { ...workoutData, id: editingWorkoutId });
+        Alert.alert("✅ Updated", "Workout updated successfully!");
+      } else {
+        const newWorkout = {
+          id: (workouts.length + 1).toString(),
+          ...workoutData,
+        };
+        await saveWorkout(user.uid, newWorkout);
+        setWorkouts([...workouts, newWorkout]);
+        Alert.alert("✅ Success", "Workout added successfully!");
+      }
+
+      setEditingWorkoutId(null);
+      setCustomTitle("");
+      setCustomDuration("");
+      setCustomDescription("");
+      setCustomRoutine("");
+      setImage(null);
+      setBase64Image(null);
+      setActiveTab("Workouts");
+    } catch (err) {
+      Alert.alert("Error", err.message);
+    }
   };
 
+  // 🗑️ Delete
+  const handleDeleteWorkout = async (workoutTitle) => {
+  const user = auth.currentUser;
+  if (!user) return Alert.alert("Error", "You must be logged in.");
+
+  if (Platform.OS === "web") {
+    // ✅ Prompt manual për web
+    const confirmDelete = window.confirm(`Are you sure you want to delete "${workoutTitle}"?`);
+    if (!confirmDelete) return;
+    try {
+      await deleteWorkout(user.uid, workoutTitle);
+      setWorkouts(workouts.filter((w) => w.title !== workoutTitle));
+      alert("✅ Deleted successfully.");
+    } catch (err) {
+      alert("Error deleting workout: " + err.message);
+    }
+  } else {
+    // ✅ Native (iOS / Android)
+    Alert.alert("Delete Workout", `Are you sure you want to delete "${workoutTitle}"?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteWorkout(user.uid, workoutTitle);
+            setWorkouts(workouts.filter((w) => w.title !== workoutTitle));
+            Alert.alert("✅ Deleted", "Workout removed successfully.");
+          } catch (err) {
+            Alert.alert("Error", err.message);
+          }
+        },
+      },
+    ]);
+  }
+};
+
+  // ⏳ Loading
+  if (loading)
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+
+  // 🧱 UI
   return (
     <SafeAreaView
       style={[
@@ -135,73 +258,61 @@ const Workouts = () => {
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
-        translucent={false}
       />
-
-      {/* Main layout (scroll + fixed footer) */}
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={[styles.scroll, { backgroundColor: colors.background }]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-            {/* Header */}
             <Text style={[styles.header, { color: colors.primary }]}>Plans</Text>
 
-            {/* Toggle Switch */}
+            {/* Tabs */}
             <View style={[styles.toggleContainer, { backgroundColor: colors.card }]}>
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  activeTab === "Workouts" && [styles.toggleActive, { backgroundColor: colors.primary }],
-                ]}
-                onPress={() => setActiveTab("Workouts")}
-              >
-                <Text
+              {["Workouts", "Custom"].map((tab) => (
+                <TouchableOpacity
+                  key={tab}
                   style={[
-                    styles.toggleText,
-                    { color: colors.text },
-                    activeTab === "Workouts" && styles.toggleTextActive,
+                    styles.toggleButton,
+                    activeTab === tab && [styles.toggleActive, { backgroundColor: colors.primary }],
                   ]}
+                  onPress={() => setActiveTab(tab)}
                 >
-                  Workouts
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.toggleButton,
-                  activeTab === "Custom" && [styles.toggleActive, { backgroundColor: colors.primary }],
-                ]}
-                onPress={() => setActiveTab("Custom")}
-              >
-                <Text
-                  style={[
-                    styles.toggleText,
-                    { color: colors.text },
-                    activeTab === "Custom" && styles.toggleTextActive,
-                  ]}
-                >
-                  Custom
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.toggleText,
+                      { color: colors.text },
+                      activeTab === tab && styles.toggleTextActive,
+                    ]}
+                  >
+                    {tab}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
-            {/* Workouts Section */}
+            {/* Workouts List */}
             {activeTab === "Workouts" ? (
               <FlatList
                 data={workouts}
                 keyExtractor={(item) => item.id}
                 scrollEnabled={false}
-                nestedScrollEnabled={true}
                 renderItem={({ item }) => (
                   <View style={{ marginBottom: 45 }}>
                     <WorkoutCard
                       title={item.title}
                       duration={item.duration}
                       functionality={item.functionality}
-                      image={item.image}
+                      image={
+                        item.imageBase64
+                          ? { uri: `data:image/jpeg;base64,${item.imageBase64}` }
+                          : typeof item.image === "string"
+                          ? { uri: item.image }
+                          : item.image
+                      }
+                      onEdit={() => handleEditWorkout(item)}
                     />
+
                     <TouchableOpacity
                       style={[styles.button, { backgroundColor: colors.primary }]}
                       onPress={() => toggleExpand(item.id)}
@@ -211,90 +322,68 @@ const Workouts = () => {
                       </Text>
                     </TouchableOpacity>
 
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteWorkout(item.title)}
+                    >
+                      <Text style={styles.deleteButtonText}>Delete Workout</Text>
+                    </TouchableOpacity>
+
                     {expandedId === item.id && (
                       <View style={[styles.routineContainer, { backgroundColor: colors.card }]}>
                         <Text style={[styles.routineTitle, { color: colors.primary }]}>
                           Workout Routine
                         </Text>
-                        {item.routine.map((routine, index) => (
-                          <Text
-                            key={index}
-                            style={[styles.routineText, { color: colors.textSecondary }]}
-                          >
-                            • {routine}
+                        {item.routine.map((r, i) => (
+                          <Text key={i} style={[styles.routineText, { color: colors.textSecondary }]}>
+                            • {r}
                           </Text>
                         ))}
                       </View>
                     )}
                   </View>
                 )}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingVertical: 16 }}
               />
             ) : (
-              // Custom Workout Section
+              // Custom Form
               <View style={[styles.customContainer, { backgroundColor: colors.card }]}>
                 <Text style={[styles.customTitle, { color: colors.primary }]}>
-                  Create Custom Workout
+                  {editingWorkoutId ? "Edit Workout" : "Create Custom Workout"}
                 </Text>
+
                 <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.surface || "#222",
-                      color: colors.text,
-                      borderColor: colors.border,
-                    },
-                  ]}
+                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                   placeholder="Workout Title"
                   placeholderTextColor={colors.textSecondary}
                   value={customTitle}
                   onChangeText={setCustomTitle}
                 />
+
                 <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.surface || "#222",
-                      color: colors.text,
-                      borderColor: colors.border,
-                    },
-                  ]}
+                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                   placeholder="Duration (e.g. 30 min)"
                   placeholderTextColor={colors.textSecondary}
                   value={customDuration}
                   onChangeText={setCustomDuration}
                 />
+
                 <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.surface || "#222",
-                      color: colors.text,
-                      borderColor: colors.border,
-                    },
-                  ]}
+                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
                   placeholder="Description"
                   placeholderTextColor={colors.textSecondary}
                   value={customDescription}
                   onChangeText={setCustomDescription}
                 />
+
                 <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      height: 100,
-                      backgroundColor: colors.surface || "#222",
-                      color: colors.text,
-                      borderColor: colors.border,
-                    },
-                  ]}
+                  style={[styles.input, { height: 100, color: colors.text, borderColor: colors.border }]}
                   placeholder="Workout Routine (one exercise per line)"
                   placeholderTextColor={colors.textSecondary}
                   value={customRoutine}
                   multiline
                   onChangeText={setCustomRoutine}
                 />
+
                 <TouchableOpacity
                   style={[styles.uploadButton, { backgroundColor: colors.primary }]}
                   onPress={pickImage}
@@ -308,19 +397,18 @@ const Workouts = () => {
 
                 <TouchableOpacity
                   style={[styles.addButton, { backgroundColor: colors.primary }]}
-                  onPress={handleAddCustom}
+                  onPress={handleAddOrUpdate}
                 >
-                  <Text style={styles.addButtonText}>Add Custom Workout</Text>
+                  <Text style={styles.addButtonText}>
+                    {editingWorkoutId ? "Update Workout" : "Add Custom Workout"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
         </ScrollView>
 
-        {/* Fixed footer */}
-        <View style={{ flexShrink: 0 }}>
-          <List onNavigate={(p) => router.push(p)} />
-        </View>
+        <List onNavigate={(p) => router.push(p)} />
       </View>
     </SafeAreaView>
   );
@@ -329,112 +417,39 @@ const Workouts = () => {
 export default Workouts;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 16,
-  },
-  scroll: {
-    padding: 20,
-    paddingBottom: 100, // keeps footer from overlapping content
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: "900",
-    textAlign: "center",
-    marginTop: 10,
-    letterSpacing: 1,
-  },
-  toggleContainer: {
-    flexDirection: "row",
-    borderRadius: 30,
-    marginTop: 20,
-    marginBottom: 15,
-    overflow: "hidden",
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  toggleActive: {
-    borderRadius: 30,
-  },
-  toggleText: {
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  toggleTextActive: {
-    color: "#fff",
-  },
-  button: {
+  container: { flex: 1 },
+  content: { paddingHorizontal: 16 },
+  scroll: { padding: 20, paddingBottom: 100 },
+  header: { fontSize: 28, fontWeight: "900", textAlign: "center", marginTop: 10, letterSpacing: 1 },
+  toggleContainer: { flexDirection: "row", borderRadius: 30, marginTop: 20, marginBottom: 15 },
+  toggleButton: { flex: 1, paddingVertical: 12, alignItems: "center" },
+  toggleActive: { borderRadius: 30 },
+  toggleText: { fontWeight: "700", fontSize: 16 },
+  toggleTextActive: { color: "#fff" },
+  button: { paddingVertical: 10, borderRadius: 10, marginTop: -12, alignItems: "center" },
+  buttonText: { color: "#000", fontWeight: "700", fontSize: 16 },
+  deleteButton: {
+    backgroundColor: "#ff4d4d",
     paddingVertical: 10,
     borderRadius: 10,
-    marginTop: -12,
+    marginTop: 8,
     alignItems: "center",
   },
-  buttonText: {
-    color: "#000",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  routineContainer: {
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 8,
-  },
-  routineTitle: {
-    fontWeight: "800",
-    fontSize: 16,
-    marginBottom: 6,
-  },
-  routineText: {
-    fontSize: 14,
-    marginVertical: 2,
-    marginLeft: 4,
-  },
-  customContainer: {
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 10,
-  },
-  customTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    marginBottom: 10,
-    textAlign: "center",
-  },
+  deleteButtonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  routineContainer: { borderRadius: 10, padding: 12, marginTop: 8 },
+  routineTitle: { fontWeight: "800", fontSize: 16, marginBottom: 6 },
+  routineText: { fontSize: 14, marginVertical: 2, marginLeft: 4 },
+  customContainer: { borderRadius: 12, padding: 16, marginTop: 10 },
+  customTitle: { fontSize: 18, fontWeight: "800", marginBottom: 10, textAlign: "center" },
   input: {
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
-    fontSize: 14,
     borderWidth: 1,
   },
-  addButton: {
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  addButtonText: {
-    color: "#000",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  uploadButton: {
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  preview: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    alignSelf: "center",
-    marginBottom: 12,
-  },
+  addButton: { paddingVertical: 12, borderRadius: 10, alignItems: "center" },
+  addButtonText: { color: "#000", fontWeight: "700", fontSize: 16 },
+  uploadButton: { borderRadius: 8, paddingVertical: 10, alignItems: "center", marginBottom: 8 },
+  preview: { width: 100, height: 100, borderRadius: 8, alignSelf: "center", marginBottom: 12 },
 });
