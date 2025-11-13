@@ -19,78 +19,19 @@ import NutritionItem from "../components/NutritionItem";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { saveNutritionGoal } from "../services/nutritionsService";
+import { 
+  saveNutritionGoal, 
+  getNutritionGoals,
+  deleteNutritionGoal 
+} from "../services/nutritionsService";
 
 const Nutrition = () => {
   const router = useRouter();
   const { colors, isDarkMode } = useTheme();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // ✅ Listen for Auth state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          // 🔎 Try to fetch Firestore user document
-          const userRef = doc(db, "users", firebaseUser.uid);
-          const snap = await getDoc(userRef);
-
-          if (snap.exists()) {
-            const data = snap.data();
-            setUser({
-              uid: firebaseUser.uid,
-              fullName: `${data.firstName || ""} ${data.lastName || ""}`.trim() || "User",
-              email: data.email || firebaseUser.email,
-            });
-          } else {
-            // 🔁 fallback to Auth data
-            setUser({
-              uid: firebaseUser.uid,
-              fullName: firebaseUser.displayName || "User",
-              email: firebaseUser.email,
-            });
-          }
-        } catch (err) {
-          console.error("🔥 Error fetching user data:", err);
-          setUser({
-            uid: firebaseUser.uid,
-            fullName: "User",
-            email: firebaseUser.email,
-          });
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, []);
-
-  // Handle saving nutrition goal (for logged-in users)
-  const [activeGoal, setActiveGoal] = useState(null);
-
-const handleSave = async (goal) => {
-  if (!user) return;
-
-  try {
-    const savedGoal = await saveNutritionGoal(user.uid, {
-      name: goal.name,
-      calories: goal.calories,
-      img: goal.img,
-    });
-
-    setActiveGoal(savedGoal); // ✅ show only the saved one
-    Alert.alert("Saved!", `${goal.name} set as your active plan ✅`);
-  } catch (e) {
-    console.log(e);
-    Alert.alert("Error", "Could not save nutrition plan.");
-  }
-};
-
-
-
+  const [savedGoals, setSavedGoals] = useState([]);
+  const [fetchingGoals, setFetchingGoals] = useState(false);
 
   // Common data
   const dietGoals = [
@@ -114,6 +55,147 @@ const handleSave = async (goal) => {
     },
   ];
 
+  // ✅ 1. Function to fetch and display saved goals when user logs in
+  const fetchUserSavedGoals = async (userId) => {
+    if (!userId) return;
+    
+    setFetchingGoals(true);
+    try {
+      console.log("📥 Fetching saved goals for user:", userId);
+      const goals = await getNutritionGoals(userId);
+      console.log("✅ Retrieved goals:", goals);
+      setSavedGoals(goals);
+    } catch (error) {
+      console.error("❌ Error fetching saved goals:", error);
+      Alert.alert("Error", "Could not load your saved nutrition plans.");
+    } finally {
+      setFetchingGoals(false);
+    }
+  };
+
+  // ✅ 2. Function to determine if a goal is currently saved
+  const isGoalSaved = (goalName) => {
+    return savedGoals.some(goal => goal.name === goalName);
+  };
+
+  // ✅ 3. Function to handle goal selection/active state
+  const handleGoalSelection = async (goal) => {
+    if (!user) {
+      Alert.alert("Login Required", "Please create an account to save nutrition plans.");
+      return;
+    }
+
+    const isCurrentlySaved = isGoalSaved(goal.name);
+
+    if (isCurrentlySaved) {
+      // Goal is already saved - offer to remove it
+      Alert.alert(
+        "Remove Goal",
+        `Do you want to remove "${goal.name}" from your saved plans?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Remove", 
+            style: "destructive",
+            onPress: () => removeSavedGoal(goal.name)
+          }
+        ]
+      );
+    } else {
+      // Save new goal
+      await saveNutritionGoalToFirestore(goal);
+    }
+  };
+
+  // ✅ 4. Function to sync Firestore data with local state (Save operation)
+  const saveNutritionGoalToFirestore = async (goal) => {
+    try {
+      const savedGoal = await saveNutritionGoal(user.uid, {
+        name: goal.name,
+        calories: goal.calories,
+        img: goal.img,
+      });
+
+      // Update local state to reflect the change
+      setSavedGoals([savedGoal]); // Since you only allow one active goal
+      Alert.alert("Saved!", `${goal.name} set as your active plan ✅`);
+    } catch (error) {
+      console.error("❌ Error saving goal:", error);
+      Alert.alert("Error", "Could not save nutrition plan.");
+    }
+  };
+
+  // ✅ 5. Function to remove saved goal and sync state
+  const removeSavedGoal = async (goalName) => {
+    try {
+      await deleteNutritionGoal(user.uid, goalName);
+      // Update local state
+      setSavedGoals(prev => prev.filter(goal => goal.name !== goalName));
+      Alert.alert("Removed", `"${goalName}" has been removed from your saved plans.`);
+    } catch (error) {
+      console.error("❌ Error removing goal:", error);
+      Alert.alert("Error", "Could not remove nutrition plan.");
+    }
+  };
+
+  // ✅ Listen for Auth state changes and fetch saved goals
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // 🔎 Try to fetch Firestore user document
+          const userRef = doc(db, "users", firebaseUser.uid);
+          const snap = await getDoc(userRef);
+
+          if (snap.exists()) {
+            const data = snap.data();
+            setUser({
+              uid: firebaseUser.uid,
+              fullName: `${data.firstName || ""} ${data.lastName || ""}`.trim() || "User",
+              email: data.email || firebaseUser.email,
+            });
+          } else {
+            // 🔁 fallback to Auth data
+            setUser({
+              uid: firebaseUser.uid,
+              fullName: firebaseUser.displayName || "User",
+              email: firebaseUser.email,
+            });
+          }
+
+          // ✅ Fetch saved goals when user logs in
+          await fetchUserSavedGoals(firebaseUser.uid);
+
+        } catch (err) {
+          console.error("🔥 Error fetching user data:", err);
+          setUser({
+            uid: firebaseUser.uid,
+            fullName: "User",
+            email: firebaseUser.email,
+          });
+        }
+      } else {
+        setUser(null);
+        setSavedGoals([]); // Clear saved goals when user logs out
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // ✅ Get the currently active goal (first one in savedGoals)
+  const activeGoal = savedGoals.length > 0 ? savedGoals[0] : null;
+
+  // Gradient colors based on theme
+  const gradientColors = isDarkMode 
+    ? [colors.background, "#001a10", colors.background]
+    : ["#ffffff", "#f0fff8", "#ffffff"];
+
+  const tipsGradientColors = isDarkMode
+    ? ["#002b1a", "#001a10"]
+    : ["#e8f5e8", "#d0ebd0"];
+
   const recommendedFoods = [
     { img: require("../assets/oatmeal.png"), name: "Oatmeal", desc: "High in fiber & keeps you full." },
     { img: require("../assets/chicken.png"), name: "Grilled Chicken", desc: "Rich in protein and low in fat." },
@@ -126,15 +208,6 @@ const handleSave = async (goal) => {
     "Include fruits & veggies in each meal.",
     "Avoid sugary drinks and processed foods.",
   ];
-
-  // Gradient colors based on theme
-  const gradientColors = isDarkMode 
-    ? [colors.background, "#001a10", colors.background]
-    : ["#ffffff", "#f0fff8", "#ffffff"];
-
-  const tipsGradientColors = isDarkMode
-    ? ["#002b1a", "#001a10"]
-    : ["#e8f5e8", "#d0ebd0"];
 
   // Loading spinner
   if (loading) {
@@ -160,13 +233,13 @@ const handleSave = async (goal) => {
           {/* 👇 Conditional rendering based on Auth state */}
           {!user ? (
             <>
-              {/* PUBLIC VIEW - nutritions.jsx */}
+              {/* PUBLIC VIEW */}
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.primary }]}>
                   Select Your Goal
                 </Text>
                 <View style={styles.cardRow}>
-                  {(activeGoal ? [activeGoal] : dietGoals).map((goal, i) => (
+                  {dietGoals.map((goal, i) => (
                     <NutritionItem
                       key={i}
                       img={goal.img}
@@ -229,50 +302,120 @@ const handleSave = async (goal) => {
             </>
           ) : (
             <>
-              {/* ✅ LOGGED-IN USER VIEW - userNutrition.jsx */}
-              <View style={styles.verticalContainer}>
-                {dietGoals.map((goal, i) => (
-                  <View key={i} style={styles.bannerCardWrapper}>
-                    
-                    {/* SAVE BUTTON IN THE CORNER */}
-                    <TouchableOpacity
-                      style={[styles.cardSaveButton, { backgroundColor: colors.primary }]}
-                      onPress={() => handleSave(goal)}
-                      activeOpacity={0.85}
-                    >
-                      <Text style={styles.saveIcon}>★</Text>
-                    </TouchableOpacity>
-
-                    {/* FULL CARD PRESS */}
-                    <TouchableOpacity
-                      style={styles.bannerCard}
-                      onPress={() => router.push(goal.route)}
-                      activeOpacity={0.90}
-                    >
-                      <Image source={goal.img} style={styles.bannerImage} />
-                      <View style={styles.overlay} />
-                      <View style={styles.bannerTextBlock}>
-                        <Text style={[styles.bannerTitle, { color: "#ffffff" }]}>
-                          {goal.name}
-                        </Text>
-                        <Text style={styles.bannerCalories}>
-                          {goal.calories}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-
-              {/* Welcome message for logged-in user */}
+              {/* ✅ LOGGED-IN USER VIEW */}
+              
+              {/* Welcome message with active goal status */}
               <View style={styles.welcomeSection}>
                 <Text style={[styles.welcomeText, { color: colors.primary }]}>
                   Welcome back, {user.fullName}! 🎉
                 </Text>
                 <Text style={[styles.welcomeSubtext, { color: colors.textSecondary }]}>
-                  Your saved nutrition plans will appear here.
+                  {activeGoal 
+                    ? `Your active plan: ${activeGoal.name}`
+                    : "Choose a nutrition plan to get started!"
+                  }
                 </Text>
+                
+                {/* Loading indicator for goals fetch */}
+                {fetchingGoals && (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+                      Loading your plans...
+                    </Text>
+                  </View>
+                )}
               </View>
+
+              {/* Nutrition Goals with Save/Remove functionality */}
+              <View style={styles.verticalContainer}>
+                {dietGoals.map((goal, i) => {
+                  const isSaved = isGoalSaved(goal.name);
+                  
+                  return (
+                    <View key={i} style={styles.bannerCardWrapper}>
+                      
+                      {/* SAVE/REMOVE BUTTON */}
+                      <TouchableOpacity
+                        style={[
+                          styles.cardSaveButton, 
+                          { 
+                            backgroundColor: isSaved ? colors.secondary : colors.primary,
+                            transform: [{ scale: isSaved ? 1.1 : 1 }]
+                          }
+                        ]}
+                        onPress={() => handleGoalSelection(goal)}
+                        activeOpacity={0.85}
+                      >
+                        <Text style={styles.saveIcon}>
+                          {isSaved ? "✓" : "★"}
+                        </Text>
+                      </TouchableOpacity>
+
+                      {/* ACTIVE GOAL BADGE */}
+                      {isSaved && (
+                        <View style={[styles.activeBadge, { backgroundColor: colors.primary }]}>
+                          <Text style={styles.activeBadgeText}>ACTIVE</Text>
+                        </View>
+                      )}
+
+                      {/* FULL CARD PRESS */}
+                      <TouchableOpacity
+                        style={[
+                          styles.bannerCard,
+                          isSaved && styles.activeCard
+                        ]}
+                        onPress={() => router.push(goal.route)}
+                        activeOpacity={0.90}
+                      >
+                        <Image source={goal.img} style={styles.bannerImage} />
+                        <View style={styles.overlay} />
+                        <View style={styles.bannerTextBlock}>
+                          <Text style={[styles.bannerTitle, { color: "#ffffff" }]}>
+                            {goal.name}
+                          </Text>
+                          <Text style={styles.bannerCalories}>
+                            {goal.calories}
+                          </Text>
+                          {isSaved && (
+                            <Text style={styles.savedText}>
+                              ✓ Saved to your profile
+                            </Text>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* Saved Goals Summary */}
+              {savedGoals.length > 0 && (
+                <View style={styles.summarySection}>
+                  <Text style={[styles.summaryTitle, { color: colors.primary }]}>
+                    Your Nutrition Plan
+                  </Text>
+                  <View style={[styles.summaryCard, { backgroundColor: colors.card }]}>
+                    <Text style={[styles.summaryGoal, { color: colors.text }]}>
+                      {savedGoals[0].name}
+                    </Text>
+                    <Text style={[styles.summaryCalories, { color: colors.textSecondary }]}>
+                      {savedGoals[0].calories}
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.manageButton, { borderColor: colors.primary }]}
+                      onPress={() => Alert.alert(
+                        "Manage Plan",
+                        "You can change your active plan by saving a different one, or remove it using the star button."
+                      )}
+                    >
+                      <Text style={[styles.manageButtonText, { color: colors.primary }]}>
+                        Manage Plan
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </>
           )}
 
@@ -360,8 +503,8 @@ const styles = StyleSheet.create({
   },
   welcomeSection: {
     alignItems: "center",
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: 10,
+    marginBottom: 20,
   },
   welcomeText: {
     fontSize: 20,
@@ -371,11 +514,22 @@ const styles = StyleSheet.create({
   welcomeSubtext: {
     fontSize: 14,
     textAlign: "center",
+    marginBottom: 10,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  loadingText: {
+    marginLeft: 8,
+    fontSize: 12,
   },
   // Styles for logged-in user view
   verticalContainer: {
     width: "100%",
-    gap: 30,
+    gap: 25,
+    marginBottom: 20,
   },
   bannerCardWrapper: {
     width: "100%",
@@ -399,48 +553,114 @@ const styles = StyleSheet.create({
   },
   saveIcon: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "900",
+  },
+  activeBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 20,
+  },
+  activeBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "800",
   },
   bannerCard: {
     width: "100%",
-    height: 200,
-    borderRadius: 20,
+    height: 180,
+    borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "#000",
     shadowColor: "#000",
     shadowOpacity: 0.25,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 10,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  activeCard: {
+    borderWidth: 2,
+    borderColor: "#4CAF50",
+    shadowColor: "#4CAF50",
+    shadowOpacity: 0.3,
+    elevation: 8,
   },
   bannerImage: {
     width: "100%",
     height: "100%",
     position: "absolute",
-    borderRadius: 20,
   },
   overlay: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: "45%",
+    height: "50%",
     backgroundColor: "rgba(0,0,0,0.45)",
   },
   bannerTextBlock: {
     position: "absolute",
     bottom: 12,
     left: 16,
+    right: 16,
   },
   bannerTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "900",
     marginBottom: 2,
   },
   bannerCalories: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 13,
+    fontWeight: "600",
     color: "#eaeaea",
+    marginBottom: 4,
+  },
+  savedText: {
+    fontSize: 11,
+    color: "#4CAF50",
+    fontWeight: "700",
+  },
+  summarySection: {
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  summaryCard: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  summaryGoal: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  summaryCalories: {
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  manageButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  manageButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
