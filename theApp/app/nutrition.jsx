@@ -33,25 +33,44 @@ const Nutrition = () => {
   const [savedGoals, setSavedGoals] = useState([]);
   const [fetchingGoals, setFetchingGoals] = useState(false);
 
-  // Common data
+  // High-quality online images for diet plans
   const dietGoals = [
     { 
-      img: require("../assets/weightloss.png"), 
+      img: { uri: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" }, 
       name: "Weight Loss", 
       route: "/weightloss",
       calories: "1500–1700 kcal/day"
     },
     { 
-      img: require("../assets/muscle.png"), 
+      img: { uri: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" }, 
       name: "Muscle Gain", 
       route: "/musclegain",
       calories: "2500–3000 kcal/day"
     },
     { 
-      img: require("../assets/energy.png"), 
+      img: { uri: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" }, 
       name: "Daily Energy", 
       route: "/dailyenergy",
       calories: "2000–2200 kcal/day"
+    },
+  ];
+
+  // High-quality recommended foods
+  const recommendedFoods = [
+    { 
+      img: { uri: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" }, 
+      name: "Oatmeal", 
+      desc: "High in fiber & keeps you full." 
+    },
+    { 
+      img: { uri: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" }, 
+      name: "Grilled Chicken", 
+      desc: "Rich in protein and low in fat." 
+    },
+    { 
+      img: { uri: "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" }, 
+      name: "Avocado", 
+      desc: "Healthy fats for energy." 
     },
   ];
 
@@ -195,12 +214,6 @@ const Nutrition = () => {
   const tipsGradientColors = isDarkMode
     ? ["#002b1a", "#001a10"]
     : ["#e8f5e8", "#d0ebd0"];
-
-  const recommendedFoods = [
-    { img: require("../assets/oatmeal.png"), name: "Oatmeal", desc: "High in fiber & keeps you full." },
-    { img: require("../assets/chicken.png"), name: "Grilled Chicken", desc: "Rich in protein and low in fat." },
-    { img: require("../assets/avocado.png"), name: "Avocado", desc: "Healthy fats for energy." },
-  ];
 
   const nutritionTips = [
     "Stay hydrated — drink 2-3L water daily.",
