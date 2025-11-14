@@ -38,8 +38,6 @@ const ChangePassword = () => {
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-
-    // fshij error-in e atij fieldi kur useri po shkruan
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
@@ -53,40 +51,40 @@ const ChangePassword = () => {
 
     // CURRENT PASSWORD
     if (!formData.currentPassword.trim()) {
-      newErrors.currentPassword = "Shkruani fjalëkalimin aktual.";
+      newErrors.currentPassword = "Please enter your current password.";
       valid = false;
     }
 
-    // NEW PASSWORD – bosh
+    // NEW PASSWORD – empty
     if (!formData.newPassword.trim()) {
-      newErrors.newPassword = "Shkruani fjalëkalimin e ri.";
+      newErrors.newPassword = "Please enter a new password.";
       valid = false;
     }
 
-    // NEW PASSWORD – i shkurtë
+    // NEW PASSWORD – short
     if (formData.newPassword.trim().length < 6) {
-      newErrors.newPassword = "Fjalëkalimi i ri duhet të ketë të paktën 6 karaktere.";
+      newErrors.newPassword = "New password must be at least 6 characters.";
       valid = false;
     }
 
-    // NEW PASSWORD – i njejtë me të vjetrin
+    // NEW PASSWORD – same as old
     if (
       formData.currentPassword.trim() &&
       formData.currentPassword === formData.newPassword
     ) {
-      newErrors.newPassword = "Fjalëkalimi i ri nuk mund të jetë i njëjtë me të vjetrin.";
+      newErrors.newPassword = "New password cannot be the same as the old one.";
       valid = false;
     }
 
-    // CONFIRM PASSWORD – bosh
+    // CONFIRM PASSWORD – empty
     if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = "Konfirmoni fjalëkalimin e ri.";
+      newErrors.confirmPassword = "Please confirm your new password.";
       valid = false;
     }
 
-    // CONFIRM PASSWORD – nuk përputhet
+    // CONFIRM PASSWORD – mismatch
     if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Fjalëkalimet nuk përputhen.";
+      newErrors.confirmPassword = "Passwords do not match.";
       valid = false;
     }
 
@@ -101,7 +99,7 @@ const ChangePassword = () => {
     if (!user) {
       setErrors((prev) => ({
         ...prev,
-        currentPassword: "Nuk ka përdorues të kyçur.",
+        currentPassword: "No user is currently logged in.",
       }));
       return;
     }
@@ -122,22 +120,22 @@ const ChangePassword = () => {
       if (error.code === "auth/wrong-password") {
         setErrors((prev) => ({
           ...prev,
-          currentPassword: "Fjalëkalimi aktual është i pasaktë.",
+          currentPassword: "The current password is incorrect.",
         }));
       } else if (error.code === "auth/too-many-requests") {
         setErrors((prev) => ({
           ...prev,
-          currentPassword: "Shumë tentime, provoni më vonë.",
+          currentPassword: "Too many attempts. Please try again later.",
         }));
       } else if (error.code === "auth/requires-recent-login") {
         setErrors((prev) => ({
           ...prev,
-          newPassword: "Rikyçu dhe provo përsëri.",
+          newPassword: "Please log in again and try updating your password.",
         }));
       } else {
         setErrors((prev) => ({
           ...prev,
-          newPassword: "Ndodhi gabim gjatë përditësimit të fjalëkalimit.",
+          newPassword: "An error occurred while updating your password.",
         }));
       }
     }
@@ -178,7 +176,8 @@ const ChangePassword = () => {
                 value={formData.currentPassword}
                 onChangeText={(t) => updateField("currentPassword", t)}
                 style={{
-                  borderColor: errors.currentPassword ? "red" : colors.border,height:35
+                  borderColor: errors.currentPassword ? "red" : colors.border,
+                  height: 35,
                 }}
               />
               {errors.currentPassword ? (
@@ -195,7 +194,8 @@ const ChangePassword = () => {
                 value={formData.newPassword}
                 onChangeText={(t) => updateField("newPassword", t)}
                 style={{
-                  borderColor: errors.newPassword ? "red" : colors.border,height:35
+                  borderColor: errors.newPassword ? "red" : colors.border,
+                  height: 35,
                 }}
               />
               {errors.newPassword ? (
@@ -212,7 +212,8 @@ const ChangePassword = () => {
                 value={formData.confirmPassword}
                 onChangeText={(t) => updateField("confirmPassword", t)}
                 style={{
-                  borderColor: errors.confirmPassword ? "red" : colors.border,height:35
+                  borderColor: errors.confirmPassword ? "red" : colors.border,
+                  height: 35,
                 }}
               />
               {errors.confirmPassword ? (
@@ -247,12 +248,12 @@ const styles = StyleSheet.create({
   backButton: { marginBottom: 10 },
   backText: { fontSize: 16, fontWeight: "600" },
 
-  header: { alignItems: "center", marginBottom: 30 },
+  header: { alignItems: "center", marginTop: 50 },
   title: { fontSize: 32, fontWeight: "900" },
   subtitle: { fontSize: 14, marginTop: 5 },
 
-  formContainer: { width: "100%" },
-  inputWrap: { marginBottom: 18, height:70 },
+  formContainer: { width: "100%", marginTop: 45 },
+  inputWrap: { marginBottom: 18, height: 70 },
 
   errorText: {
     color: "red",

@@ -53,23 +53,23 @@ const Signup = () => {
     };
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = "Shkruani emrin e plotë.";
+      newErrors.fullName = "Please enter your full name.";
       valid = false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Shkruani një email të vlefshëm.";
+      newErrors.email = "Please enter a valid email.";
       valid = false;
     }
 
     if (formData.password.length < 6) {
-      newErrors.password = "Fjalëkalimi duhet të ketë min. 6 karaktere.";
+      newErrors.password = "Password must be at least 6 characters.";
       valid = false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Fjalëkalimet nuk përputhen.";
+      newErrors.confirmPassword = "Passwords do not match.";
       valid = false;
     }
 
@@ -87,7 +87,6 @@ const Signup = () => {
       if (result.success) {
         router.replace("/home");
       } else {
-        // Error nga Firebase → te email
         setErrors((prev) => ({
           ...prev,
           email: result.message,
@@ -140,7 +139,9 @@ const Signup = () => {
                 value={formData.fullName}
                 onChangeText={(t) => updateFormData("fullName", t)}
                 style={{
-                  borderColor: errors.fullName ? "red" : colors.border, height:35
+                  borderColor: errors.fullName ? "red" : colors.border,
+                  height: 40,
+                  color: "#fff",
                 }}
               />
               {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
@@ -156,7 +157,9 @@ const Signup = () => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 style={{
-                  borderColor: errors.email ? "red" : colors.border,height:35
+                  borderColor: errors.email ? "red" : colors.border,
+                  height: 40,
+                  color: "#fff",
                 }}
               />
               {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
@@ -171,7 +174,9 @@ const Signup = () => {
                 value={formData.password}
                 onChangeText={(t) => updateFormData("password", t)}
                 style={{
-                  borderColor: errors.password ? "red" : colors.border,height:35
+                  borderColor: errors.password ? "red" : colors.border,
+                  height: 40,
+                  color: "#fff",
                 }}
               />
               {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
@@ -186,7 +191,9 @@ const Signup = () => {
                 value={formData.confirmPassword}
                 onChangeText={(t) => updateFormData("confirmPassword", t)}
                 style={{
-                  borderColor: errors.confirmPassword ? "red" : colors.border,height:35
+                  borderColor: errors.confirmPassword ? "red" : colors.border,
+                  height: 40,
+                  color: "#fff",
                 }}
               />
               {errors.confirmPassword ? (
@@ -194,7 +201,7 @@ const Signup = () => {
               ) : null}
             </View>
 
-            {/* SIGNUP BUTTON */}
+            {/* BUTTON */}
             <TouchableOpacity
               style={[styles.signupButton, { backgroundColor: colors.primary }]}
               onPress={handleSignup}
@@ -203,13 +210,13 @@ const Signup = () => {
             </TouchableOpacity>
 
             {/* DIVIDER */}
-            <View className={styles.divider}>
+            <View style={styles.divider}>
               <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
               <Text style={[styles.dividerText, { color: colors.textSecondary }]}>OR</Text>
               <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </View>
 
-            {/* Login Redirect */}
+            {/* LOGIN REDIRECT */}
             <View style={styles.loginRedirect}>
               <Text style={[styles.loginText, { color: colors.textSecondary }]}>
                 Already have an account?
@@ -245,15 +252,14 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
     marginBottom: 10,
   },
   welcomeText: { fontSize: 28, fontWeight: "800", marginBottom: 8, textAlign: "center" },
   subtitle: { fontSize: 14, textAlign: "center", lineHeight: 20 },
 
   formContainer: { width: "100%", marginTop: 20 },
-  inputWrap: { marginBottom: 18,height:75},
+
+  inputWrap: { marginBottom: 18, height: 70 },
 
   errorText: {
     color: "red",
@@ -269,16 +275,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
     marginBottom: 30,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
   signupButtonText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 
   divider: { flexDirection: "row", alignItems: "center", marginBottom: 30 },
   dividerLine: { flex: 1, height: 1 },
-  dividerText: { paddingHorizontal: 15, fontSize: 12, fontWeight: "600" },
+  dividerText: { paddingHorizontal: 15, fontSize: 15, fontWeight: "600", textAlign: "center" },
 
   loginRedirect: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
   loginText: { fontSize: 14 },

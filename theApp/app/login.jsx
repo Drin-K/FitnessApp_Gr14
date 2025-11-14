@@ -32,24 +32,24 @@ const LoginScreen = () => {
 
   const router = useRouter();
 
-  // VALIDIMET
+  // VALIDATION
   const validate = () => {
     let valid = true;
     let newErrors = { email: "", password: "", general: "" };
 
     if (!email.trim()) {
-      newErrors.email = "Shkruani emailin.";
+      newErrors.email = "Please enter your email.";
       valid = false;
     } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      newErrors.email = "Email-i nuk është i vlefshëm.";
+      newErrors.email = "Invalid email format.";
       valid = false;
     }
 
     if (!password.trim()) {
-      newErrors.password = "Shkruani fjalëkalimin.";
+      newErrors.password = "Please enter your password.";
       valid = false;
     } else if (password.length < 6) {
-      newErrors.password = "Fjalëkalimi duhet të ketë min. 6 karaktere.";
+      newErrors.password = "Password must be at least 6 characters.";
       valid = false;
     }
 
@@ -69,21 +69,24 @@ const LoginScreen = () => {
       const err = result.message;
 
       if (err.includes("wrong-password")) {
-        setErrors((prev) => ({ ...prev, password: "Fjalëkalimi është i pasaktë." }));
+        setErrors((prev) => ({ ...prev, password: "Incorrect password." }));
       } else if (err.includes("user-not-found")) {
-        setErrors((prev) => ({ ...prev, email: "Ky përdorues nuk ekziston." }));
+        setErrors((prev) => ({ ...prev, email: "This user does not exist." }));
       } else if (err.includes("too-many-requests")) {
         setErrors((prev) => ({
           ...prev,
-          password: "Shumë tentime, provoni më vonë.",
+          password: "Too many attempts. Try again later.",
         }));
       } else {
-        setErrors((prev) => ({ ...prev, general: "Ndodhi një gabim. Provoni përsëri." }));
+        setErrors((prev) => ({
+          ...prev,
+          general: "An error occurred. Please try again.",
+        }));
       }
     }
   };
 
-  // GOOGLE LOGIN (WEB VETËM)
+  // GOOGLE LOGIN (WEB ONLY)
   const handleGoogleLogin = async () => {
     setErrors({ email: "", password: "", general: "" });
 
@@ -94,7 +97,7 @@ const LoginScreen = () => {
     } catch (error) {
       setErrors((prev) => ({
         ...prev,
-        general: "Gabim gjatë kyçjes me Google.",
+        general: "Google login failed.",
       }));
     }
   };
@@ -110,7 +113,8 @@ const LoginScreen = () => {
         styles.container,
         {
           backgroundColor: colors.background,
-          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
+          paddingTop:
+            Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
         },
       ]}
     >
@@ -125,7 +129,9 @@ const LoginScreen = () => {
             contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={[styles.title, { color: colors.primary }]}>Welcome Back</Text>
+            <Text style={[styles.title, { color: colors.primary }]}>
+              Welcome Back
+            </Text>
 
             {/* Email */}
             <View
@@ -137,7 +143,12 @@ const LoginScreen = () => {
                 },
               ]}
             >
-              <Ionicons name="mail-outline" size={20} color={colors.primary} style={styles.icon} />
+              <Ionicons
+                name="mail-outline"
+                size={20}
+                color={colors.primary}
+                style={styles.icon}
+              />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="Email address"
@@ -150,7 +161,9 @@ const LoginScreen = () => {
                 }}
               />
             </View>
-            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+            {errors.email ? (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            ) : null}
 
             {/* Password */}
             <View
@@ -162,7 +175,12 @@ const LoginScreen = () => {
                 },
               ]}
             >
-              <Ionicons name="lock-closed-outline" size={20} color={colors.primary} style={styles.icon} />
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color={colors.primary}
+                style={styles.icon}
+              />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="Password"
@@ -175,9 +193,13 @@ const LoginScreen = () => {
                 }}
               />
             </View>
-            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+            {errors.password ? (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            ) : null}
 
-            {errors.general ? <Text style={styles.errorText}>{errors.general}</Text> : null}
+            {errors.general ? (
+              <Text style={styles.errorText}>{errors.general}</Text>
+            ) : null}
 
             {/* Sign In Button */}
             <TouchableOpacity
@@ -187,18 +209,26 @@ const LoginScreen = () => {
               ]}
               onPress={handleLogin}
             >
-              <Text style={[styles.buttonText, { color: colors.primary }]}>Sign In</Text>
+              <Text style={[styles.buttonText, { color: colors.primary }]}>
+                Sign In
+              </Text>
             </TouchableOpacity>
 
             {/* Google Login */}
             <TouchableOpacity
               style={[
                 styles.button,
-                { backgroundColor: "#DB4437", borderColor: "#DB4437", marginTop: 10 },
+                {
+                  backgroundColor: "#DB4437",
+                  borderColor: "#DB4437",
+                  marginTop: 10,
+                },
               ]}
               onPress={handleGoogleLogin}
             >
-              <Text style={[styles.buttonText, { color: "#fff" }]}>Sign in with Google</Text>
+              <Text style={[styles.buttonText, { color: "#fff" }]}>
+                Sign in with Google
+              </Text>
             </TouchableOpacity>
 
             {/* Signup */}
@@ -260,17 +290,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 13,
     fontWeight: "500",
-  },
-
-  termsText: {
-    fontSize: 12,
-    textAlign: "center",
-    marginBottom: 25,
-    lineHeight: 18,
-  },
-
-  link: {
-    textDecorationLine: "underline",
   },
 
   button: {
