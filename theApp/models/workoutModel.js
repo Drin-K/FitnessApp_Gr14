@@ -3,17 +3,19 @@
 // Model for a workout plan (for saving in Firestore)
 export class Workout {
   constructor({
-    title,
-    duration,
-    functionality,
-    image = null,
+    id = null,
+    title = "",
+    duration = "",
+    functionality = "",
+    imageBase64 = null,       // <-- THELBËSORE
     routine = [],
     createdAt = Date.now(),
   }) {
+    this.id = id;
     this.title = title;
     this.duration = duration;
     this.functionality = functionality;
-    this.image = image;
+    this.imageBase64 = imageBase64;  // <-- THELBËSORE
     this.routine = routine;
     this.createdAt = createdAt;
   }
@@ -23,10 +25,11 @@ export class Workout {
 export const workoutConverter = {
   toFirestore(workout) {
     return {
+      id: workout.id,
       title: workout.title,
       duration: workout.duration,
       functionality: workout.functionality,
-      image: workout.image || null,
+      imageBase64: workout.imageBase64 || null, // <-- THELBËSORE
       routine: workout.routine || [],
       createdAt: workout.createdAt || Date.now(),
     };
@@ -35,11 +38,12 @@ export const workoutConverter = {
   fromFirestore(snapshot) {
     const data = snapshot.data();
     return new Workout({
+      id: data.id ?? snapshot.id,   // <-- që id mos humbet
       title: data.title,
       duration: data.duration,
       functionality: data.functionality,
-      image: data.image,
-      routine: data.routine,
+      imageBase64: data.imageBase64 ?? null, // <-- THELBËSORE
+      routine: data.routine || [],
       createdAt: data.createdAt,
     });
   },

@@ -22,6 +22,54 @@ import List from "../components/List";
 import { auth } from "../firebase";
 import { saveWorkout, getWorkouts, deleteWorkout } from "../services/workoutService";
 
+const showAlert = (title, message) => {
+  if (Platform.OS === "web") {
+    window.alert(`${title}\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+};
+
+
+const defaultImages = {
+  "default-1": require("../assets/images/workout1.jpg"),
+  "default-2": require("../assets/images/workout2.jpg"),
+  "default-3": require("../assets/images/workout3.webp"),
+  "default-4": require("../assets/images/workout4.webp"),
+  "default-5": require("../assets/images/workout5.webp"),
+  "default-6": require("../assets/images/workout6.webp"),
+};
+
+
+const seedInitialWorkouts = async (userId) => {
+  try {
+    const data = await getWorkouts(userId);
+
+    // Nëse user-i ka tashmë workouts → mos bëj seed
+    if (data.length > 0) return false;
+
+    // Përgatit workouts me ID reale
+    const prepared = initialWorkouts.map((w) => ({
+      id: `default-${w.id}`,
+      title: w.title,
+      duration: w.duration,
+      functionality: w.functionality,
+      routine: w.routine,
+      imageBase64: null, // default images nuk jane base64
+    }));
+
+    // Ruaji në DB
+    for (const workout of prepared) {
+      await saveWorkout(userId, workout);
+    }
+
+    return true;
+  } catch (err) {
+    console.log("Seed error:", err);
+    return false;
+  }
+};
+
 // ✅ Default workouts
 const initialWorkouts = [
   {
@@ -79,8 +127,11 @@ const Workouts = () => {
   const { colors, isDarkMode } = useTheme();
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState("Workouts");
-  const [workouts, setWorkouts] = useState(initialWorkouts);
+  const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const isLoggedIn = !!auth.currentUser;
+
+
 
   // Form state
   const [customTitle, setCustomTitle] = useState("");
@@ -93,44 +144,86 @@ const Workouts = () => {
 
   const toggleExpand = (id) => setExpandedId(expandedId === id ? null : id);
 
+  const pickImageWeb = () => {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return resolve(null);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result.split(",")[1]; 
+        resolve(base64);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
+  });
+};
+
   // 📸 Pick image (base64)
   const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        quality: 0.8,
-        base64: true,
-      });
+  try {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      quality: 0.8,
+      base64: true,
+    });
 
-      if (result.canceled) return;
-      const asset = result.assets?.[0];
-      if (!asset?.uri) return;
+    if (result.canceled) return;
+    const asset = result.assets?.[0];
+    if (!asset?.uri) return;
 
-      setImage(asset.uri);
-      if (asset.base64) setBase64Image(asset.base64);
-    } catch (error) {
-      console.error("❌ Error in pickImage:", error);
-      Alert.alert("Error", "Failed to pick image. Try again.");
-    }
-  };
+    setImage(asset.uri);
+    if (asset.base64) setBase64Image(asset.base64);
+  } catch (error) {
+    console.error("❌ Error in pickImage:", error);
+    Alert.alert("Error", "Failed to pick image. Try again.");
+  }
+};
+
 
   // 🔥 Fetch workouts
   useEffect(() => {
-    const fetchWorkouts = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-      setLoading(true);
-      try {
-        const data = await getWorkouts(user.uid);
-        setWorkouts([...initialWorkouts, ...data]);
-      } catch (err) {
-        console.error("Error fetching workouts:", err);
-      }
-      setLoading(false);
-    };
-    fetchWorkouts();
-  }, []);
+  const loadWorkouts = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+  const mappedDefaults = initialWorkouts.map((w) => ({
+    ...w,
+    id: `default-${w.id}`,   // TRANSFORMO ID-të që të përputhen me defaultImages
+  }));
+
+  setWorkouts(mappedDefaults);
+  return;
+}
+
+
+    setLoading(true);
+
+    // 1) Provo me seed default workouts herën e parë
+    await seedInitialWorkouts(user.uid);
+
+    // 2) Pastaj i merr 100% nga Firebase
+    const data = await getWorkouts(user.uid);
+
+    const sanitized = data.map((w, index) => ({
+      ...w,
+      id: w.id ?? `custom-${index}-${Date.now()}`,
+    }));
+
+    setWorkouts(data);
+    setLoading(false);
+  };
+
+  loadWorkouts();
+}, []);
+
 
   // ✏️ Handle Edit
   const handleEditWorkout = (workout) => {
@@ -155,19 +248,19 @@ const Workouts = () => {
   // 💾 Add or Update
   const handleAddOrUpdate = async () => {
     if (!customTitle.trim() || !customRoutine.trim())
-      return Alert.alert("Error", "Please fill all fields.");
+      return showAlert("Error", "Please fill all fields.");;
 
     const user = auth.currentUser;
     if (!user) return Alert.alert("Error", "You must be logged in.");
 
     try {
       const workoutData = {
-        title: customTitle,
-        duration: customDuration || "30 min",
-        functionality: customDescription,
-        imageBase64: base64Image,
-        routine: customRoutine.split("\n").filter((r) => r.trim() !== ""),
-      };
+  title: customTitle,
+  duration: customDuration || "30 min",
+  functionality: customDescription,
+  imageBase64: base64Image ??  null,
+  routine: customRoutine.split("\n").filter((r) => r.trim() !== ""),
+};
 
       if (editingWorkoutId) {
         const updatedList = workouts.map((w) =>
@@ -175,7 +268,7 @@ const Workouts = () => {
         );
         setWorkouts(updatedList);
         await saveWorkout(user.uid, { ...workoutData, id: editingWorkoutId });
-        Alert.alert("✅ Updated", "Workout updated successfully!");
+        showAlert("Updated", "Workout updated successfully!");
       } else {
         const newWorkout = {
           id: (workouts.length + 1).toString(),
@@ -183,7 +276,7 @@ const Workouts = () => {
         };
         await saveWorkout(user.uid, newWorkout);
         setWorkouts([...workouts, newWorkout]);
-        Alert.alert("✅ Success", "Workout added successfully!");
+        showAlert("Success","Workout added succesfully !");
       }
 
       setEditingWorkoutId(null);
@@ -200,41 +293,52 @@ const Workouts = () => {
   };
 
   // 🗑️ Delete
-  const handleDeleteWorkout = async (workoutTitle) => {
+const handleDeleteWorkout = async (workoutId) => {
   const user = auth.currentUser;
   if (!user) return Alert.alert("Error", "You must be logged in.");
 
+  // Get workout object to display the title in the alert
+  const workout = workouts.find((w) => w.id === workoutId);
+  const workoutTitle = workout?.title ?? "this workout";
+
   if (Platform.OS === "web") {
-    // ✅ Prompt manual për web
-    const confirmDelete = window.confirm(`Are you sure you want to delete "${workoutTitle}"?`);
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${workoutTitle}"?`
+    );
     if (!confirmDelete) return;
+
     try {
-      await deleteWorkout(user.uid, workoutTitle);
-      setWorkouts(workouts.filter((w) => w.title !== workoutTitle));
-      alert("✅ Deleted successfully.");
+      await deleteWorkout(user.uid, workoutId);
+      setWorkouts(workouts.filter((w) => w.id !== workoutId));
+      alert("✅ Workout deleted successfully.");
     } catch (err) {
       alert("Error deleting workout: " + err.message);
     }
   } else {
-    // ✅ Native (iOS / Android)
-    Alert.alert("Delete Workout", `Are you sure you want to delete "${workoutTitle}"?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteWorkout(user.uid, workoutTitle);
-            setWorkouts(workouts.filter((w) => w.title !== workoutTitle));
-            Alert.alert("✅ Deleted", "Workout removed successfully.");
-          } catch (err) {
-            Alert.alert("Error", err.message);
-          }
+    Alert.alert(
+      "Delete Workout",
+      `Are you sure you want to delete "${workoutTitle}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteWorkout(user.uid, workoutId);
+              setWorkouts(workouts.filter((w) => w.id !== workoutId));
+              Alert.alert("Deleted", "Workout removed successfully.");
+            } catch (err) {
+              Alert.alert("Error", err.message);
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   }
 };
+
+
 
   // ⏳ Loading
   if (loading)
@@ -304,30 +408,41 @@ const Workouts = () => {
                       duration={item.duration}
                       functionality={item.functionality}
                       image={
-                        item.imageBase64
-                          ? { uri: `data:image/jpeg;base64,${item.imageBase64}` }
-                          : typeof item.image === "string"
-                          ? { uri: item.image }
-                          : item.image
-                      }
+  item.imageBase64
+    ? { uri: `data:image/jpeg;base64,${item.imageBase64}` }
+    : defaultImages[item.id] ?? null
+}
                       onEdit={() => handleEditWorkout(item)}
+                      isLoggedIn={isLoggedIn}
+
+
                     />
 
                     <TouchableOpacity
                       style={[styles.button, { backgroundColor: colors.primary }]}
-                      onPress={() => toggleExpand(item.id)}
+                      onPress={() =>
+  router.push({
+    pathname: "/workoutsession",
+    params: {
+      title: item.title,
+      duration: item.duration,
+      routine: item.routine.join("|"),
+    },
+  })
+}
+
                     >
-                      <Text style={styles.buttonText}>
-                        {expandedId === item.id ? "Hide Workout" : "See Workout"}
-                      </Text>
+                     <Text style={styles.buttonText}>Start Workout</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteWorkout(item.title)}
-                    >
-                      <Text style={styles.deleteButtonText}>Delete Workout</Text>
-                    </TouchableOpacity>
+                    {auth.currentUser && (
+  <TouchableOpacity
+    style={styles.deleteButton}
+    onPress={() => handleDeleteWorkout(item.id)}
+  >
+    <Text style={styles.deleteButtonText}>Delete Workout</Text>
+  </TouchableOpacity>
+)}
 
                     {expandedId === item.id && (
                       <View style={[styles.routineContainer, { backgroundColor: colors.card }]}>
@@ -335,9 +450,12 @@ const Workouts = () => {
                           Workout Routine
                         </Text>
                         {item.routine.map((r, i) => (
-                          <Text key={i} style={[styles.routineText, { color: colors.textSecondary }]}>
-                            • {r}
-                          </Text>
+  <Text
+    key={`${item.id}-${i}`}
+    style={[styles.routineText, { color: colors.textSecondary }]}
+  >
+    • {r}
+  </Text>
                         ))}
                       </View>
                     )}

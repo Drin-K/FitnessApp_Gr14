@@ -2,13 +2,16 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
-const WorkoutCard = ({ title, duration, functionality, image, onEdit }) => {
+const WorkoutCard = ({ title, duration, functionality, image, onEdit, isLoggedIn  }) => {
   return (
     <View style={styles.card}>
       {/* ✏️ Ikona Edit lart majtas */}
-      <TouchableOpacity style={styles.editIcon} onPress={onEdit}>
+      {isLoggedIn && (
+ <TouchableOpacity style={styles.editIcon} onPress={onEdit}>
         <Icon name="pencil" size={18} color="#fff" />
       </TouchableOpacity>
+)}
+
 
       <Image source={image} style={styles.image} resizeMode="cover" />
 
