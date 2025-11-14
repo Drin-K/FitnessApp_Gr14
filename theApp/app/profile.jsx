@@ -150,7 +150,7 @@ const ProfileScreen = () => {
               <View style={styles.options}>
                 <TouchableOpacity
                   style={styles.optionButton}
-                  onPress={() => router.push("/change-password")}
+                  onPress={() => router.push("/changePassword")}
                 >
                   <Text style={styles.optionText}>Change Password</Text>
                 </TouchableOpacity>

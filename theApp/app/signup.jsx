@@ -8,13 +8,12 @@ import {
   TouchableOpacity,
   Platform,
   KeyboardAvoidingView,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
 import InputField from "../components/InputField";
-import { signUpUser } from "../services/authService"; // ✅ Importo authService
+import { signUpUser } from "../services/authService";
 
 const Signup = () => {
   const router = useRouter();
@@ -27,50 +26,78 @@ const Signup = () => {
     confirmPassword: "",
   });
 
+  const [errors, setErrors] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
   const updateFormData = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  // ✅ Funksioni kryesor për signup me validim
-  const handleSignup = async () => {
-    const { fullName, email, password, confirmPassword } = formData;
+  // VALIDATION
+  const validate = () => {
+    let valid = true;
+    let newErrors = {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
 
-    // 🧩 Validimi i inputeve
-    if (!fullName || !email || !password || !confirmPassword) {
-      Alert.alert("Gabim", "Ju lutem plotësoni të gjitha fushat!");
-      return;
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = "Shkruani emrin e plotë.";
+      valid = false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("Gabim", "Email-i nuk është i vlefshëm!");
-      return;
+    if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Shkruani një email të vlefshëm.";
+      valid = false;
     }
 
-    if (password.length < 6) {
-      Alert.alert("Gabim", "Fjalëkalimi duhet të ketë të paktën 6 karaktere!");
-      return;
+    if (formData.password.length < 6) {
+      newErrors.password = "Fjalëkalimi duhet të ketë min. 6 karaktere.";
+      valid = false;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert("Gabim", "Fjalëkalimet nuk përputhen!");
-      return;
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Fjalëkalimet nuk përputhen.";
+      valid = false;
     }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const handleSignup = async () => {
+    if (!validate()) return;
 
     try {
-      // ✅ Regjistro përdoruesin me Firebase (nga authService)
+      const { fullName, email, password } = formData;
+
       const result = await signUpUser(fullName, "", email, password);
       if (result.success) {
-        Alert.alert("Sukses", "Llogaria u krijua me sukses!");
-        router.replace("/home"); // pas regjistrimit shkon në Home (layout e detekton userin)
+        router.replace("/home");
       } else {
-        Alert.alert("Gabim", result.message);
+        // Error nga Firebase → te email
+        setErrors((prev) => ({
+          ...prev,
+          email: result.message,
+        }));
       }
     } catch (error) {
-      Alert.alert("Gabim", error.message);
+      setErrors((prev) => ({
+        ...prev,
+        email: error.message,
+      }));
     }
   };
 
@@ -87,6 +114,7 @@ const Signup = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
           {/* Back Button */}
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={[styles.backText, { color: colors.primary }]}>← Back</Text>
@@ -101,48 +129,72 @@ const Signup = () => {
             </Text>
           </View>
 
-          {/* Signup Form */}
+          {/* FORM */}
           <View style={styles.formContainer}>
-            <InputField
-              label="Full Name"
-              placeholder="Enter your full name"
-              value={formData.fullName}
-              onChangeText={(text) => updateFormData("fullName", text)}
-              autoCapitalize="words"
-              autoComplete="name"
-            />
 
-            <InputField
-              label="Email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChangeText={(text) => updateFormData("email", text)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
+            {/* FULL NAME */}
+            <View style={styles.inputWrap}>
+              <InputField
+                label="Full Name"
+                placeholder="Enter your full name"
+                value={formData.fullName}
+                onChangeText={(t) => updateFormData("fullName", t)}
+                style={{
+                  borderColor: errors.fullName ? "red" : colors.border, height:35
+                }}
+              />
+              {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
+            </View>
 
-            <InputField
-              label="Password"
-              placeholder="Create a password"
-              value={formData.password}
-              onChangeText={(text) => updateFormData("password", text)}
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="password-new"
-            />
+            {/* EMAIL */}
+            <View style={styles.inputWrap}>
+              <InputField
+                label="Email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChangeText={(t) => updateFormData("email", t)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={{
+                  borderColor: errors.email ? "red" : colors.border,height:35
+                }}
+              />
+              {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+            </View>
 
-            <InputField
-              label="Confirm Password"
-              placeholder="Confirm your password"
-              value={formData.confirmPassword}
-              onChangeText={(text) => updateFormData("confirmPassword", text)}
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="password-new"
-            />
+            {/* PASSWORD */}
+            <View style={styles.inputWrap}>
+              <InputField
+                label="Password"
+                placeholder="Create a password"
+                secureTextEntry
+                value={formData.password}
+                onChangeText={(t) => updateFormData("password", t)}
+                style={{
+                  borderColor: errors.password ? "red" : colors.border,height:35
+                }}
+              />
+              {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+            </View>
 
-            {/* Signup Button */}
+            {/* CONFIRM PASSWORD */}
+            <View style={styles.inputWrap}>
+              <InputField
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                secureTextEntry
+                value={formData.confirmPassword}
+                onChangeText={(t) => updateFormData("confirmPassword", t)}
+                style={{
+                  borderColor: errors.confirmPassword ? "red" : colors.border,height:35
+                }}
+              />
+              {errors.confirmPassword ? (
+                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+              ) : null}
+            </View>
+
+            {/* SIGNUP BUTTON */}
             <TouchableOpacity
               style={[styles.signupButton, { backgroundColor: colors.primary }]}
               onPress={handleSignup}
@@ -150,8 +202,8 @@ const Signup = () => {
               <Text style={styles.signupButtonText}>Create Account</Text>
             </TouchableOpacity>
 
-            {/* Divider */}
-            <View style={styles.divider}>
+            {/* DIVIDER */}
+            <View className={styles.divider}>
               <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
               <Text style={[styles.dividerText, { color: colors.textSecondary }]}>OR</Text>
               <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
@@ -166,9 +218,11 @@ const Signup = () => {
                 <Text style={[styles.loginLink, { color: colors.primary }]}> Sign In</Text>
               </TouchableOpacity>
             </View>
+
           </View>
 
           <View style={{ height: 50 }} />
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -199,6 +253,16 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, textAlign: "center", lineHeight: 20 },
 
   formContainer: { width: "100%", marginTop: 20 },
+  inputWrap: { marginBottom: 18,height:75},
+
+  errorText: {
+    color: "red",
+    marginTop: -20,
+    marginLeft: 4,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+
   signupButton: {
     paddingVertical: 16,
     borderRadius: 12,
@@ -210,7 +274,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  signupButtonText: { color: "#fff", fontSize: 16, fontWeight: "800", letterSpacing: 0.5 },
+  signupButtonText: { color: "#fff", fontSize: 16, fontWeight: "800" },
 
   divider: { flexDirection: "row", alignItems: "center", marginBottom: 30 },
   dividerLine: { flex: 1, height: 1 },

@@ -8,7 +8,6 @@ import {
   ScrollView,
   Platform,
   StatusBar,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -24,39 +23,83 @@ const LoginScreen = () => {
   const { colors, isDarkMode } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    general: "",
+  });
+
   const router = useRouter();
 
-  // 🔑 Email/Password login
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Gabim", "Ju lutem plotësoni emailin dhe fjalëkalimin");
-      return;
+  // VALIDIMET
+  const validate = () => {
+    let valid = true;
+    let newErrors = { email: "", password: "", general: "" };
+
+    if (!email.trim()) {
+      newErrors.email = "Shkruani emailin.";
+      valid = false;
+    } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      newErrors.email = "Email-i nuk është i vlefshëm.";
+      valid = false;
     }
 
-    const result = await loginUser(email, password);
+    if (!password.trim()) {
+      newErrors.password = "Shkruani fjalëkalimin.";
+      valid = false;
+    } else if (password.length < 6) {
+      newErrors.password = "Fjalëkalimi duhet të ketë min. 6 karaktere.";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
+  // EMAIL/PASSWORD LOGIN
+  const handleLogin = async () => {
+    if (!validate()) return;
+
+    const result = await loginUser(email.trim(), password);
+
     if (result.success) {
-      Alert.alert("Sukses", "Jeni kyçur me sukses!");
-      router.push("/"); // Home page
+      router.push("/");
     } else {
-      Alert.alert("Gabim", result.message);
+      const err = result.message;
+
+      if (err.includes("wrong-password")) {
+        setErrors((prev) => ({ ...prev, password: "Fjalëkalimi është i pasaktë." }));
+      } else if (err.includes("user-not-found")) {
+        setErrors((prev) => ({ ...prev, email: "Ky përdorues nuk ekziston." }));
+      } else if (err.includes("too-many-requests")) {
+        setErrors((prev) => ({
+          ...prev,
+          password: "Shumë tentime, provoni më vonë.",
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, general: "Ndodhi një gabim. Provoni përsëri." }));
+      }
     }
   };
 
-  // 🌐 Google Login (për web localhost)
+  // GOOGLE LOGIN (WEB VETËM)
   const handleGoogleLogin = async () => {
+    setErrors({ email: "", password: "", general: "" });
+
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      console.log("✅ Google login sukses:", result.user.email);
-      Alert.alert("Sukses", "Jeni kyçur me Google!");
-      router.replace("/"); // pas loginit -> home
+      await signInWithPopup(auth, provider);
+      router.replace("/");
     } catch (error) {
-      console.error("❌ Gabim gjatë Google login:", error.message);
-      Alert.alert("Gabim", error.message);
+      setErrors((prev) => ({
+        ...prev,
+        general: "Gabim gjatë kyçjes me Google.",
+      }));
     }
   };
 
-  // 🎨 Gradient sipas temës
+  // GRADIENT
   const gradientColors = isDarkMode
     ? [colors.background, "#001a10", colors.background]
     : ["#ffffff", "#f0fff8", "#ffffff"];
@@ -67,15 +110,13 @@ const LoginScreen = () => {
         styles.container,
         {
           backgroundColor: colors.background,
-          paddingTop:
-            Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
+          paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
         },
       ]}
     >
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
-        translucent={false}
       />
 
       <View style={{ flex: 1 }}>
@@ -84,107 +125,83 @@ const LoginScreen = () => {
             contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={[styles.title, { color: colors.primary }]}>
-              Welcome Back
-            </Text>
+            <Text style={[styles.title, { color: colors.primary }]}>Welcome Back</Text>
 
-            {/* 📧 Email */}
+            {/* Email */}
             <View
               style={[
                 styles.inputContainer,
                 {
                   backgroundColor: colors.card,
-                  borderColor: colors.border,
+                  borderColor: errors.email ? "red" : colors.border,
                 },
               ]}
             >
-              <Ionicons
-                name="mail-outline"
-                size={20}
-                color={colors.primary}
-                style={styles.icon}
-              />
+              <Ionicons name="mail-outline" size={20} color={colors.primary} style={styles.icon} />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="Email address"
                 placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(t) => {
+                  setEmail(t);
+                  setErrors((prev) => ({ ...prev, email: "" }));
+                }}
               />
             </View>
+            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
 
-            {/* 🔒 Password */}
+            {/* Password */}
             <View
               style={[
                 styles.inputContainer,
                 {
                   backgroundColor: colors.card,
-                  borderColor: colors.border,
+                  borderColor: errors.password ? "red" : colors.border,
                 },
               ]}
             >
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color={colors.primary}
-                style={styles.icon}
-              />
+              <Ionicons name="lock-closed-outline" size={20} color={colors.primary} style={styles.icon} />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="Password"
                 placeholderTextColor={colors.textSecondary}
                 secureTextEntry
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(t) => {
+                  setPassword(t);
+                  setErrors((prev) => ({ ...prev, password: "" }));
+                }}
               />
             </View>
+            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
 
-            <Text style={[styles.termsText, { color: colors.textSecondary }]}>
-              By logging in, you agree to IllyrianGym{" "}
-              <Text style={[styles.link, { color: colors.primary }]}>
-                Privacy Policy
-              </Text>{" "}
-              and{" "}
-              <Text style={[styles.link, { color: colors.primary }]}>
-                Terms and Conditions
-              </Text>
-            </Text>
+            {errors.general ? <Text style={styles.errorText}>{errors.general}</Text> : null}
 
-            {/* Email Login Button */}
+            {/* Sign In Button */}
             <TouchableOpacity
               style={[
                 styles.button,
-                {
-                  backgroundColor: colors.card,
-                  borderColor: colors.primary,
-                },
+                { backgroundColor: colors.card, borderColor: colors.primary },
               ]}
               onPress={handleLogin}
             >
-              <Text style={[styles.buttonText, { color: colors.primary }]}>
-                Sign In
-              </Text>
+              <Text style={[styles.buttonText, { color: colors.primary }]}>Sign In</Text>
             </TouchableOpacity>
 
-            {/* 🌐 Google Login Button */}
+            {/* Google Login */}
             <TouchableOpacity
               style={[
                 styles.button,
-                {
-                  backgroundColor: "#DB4437",
-                  borderColor: "#DB4437",
-                  marginTop: 10,
-                },
+                { backgroundColor: "#DB4437", borderColor: "#DB4437", marginTop: 10 },
               ]}
               onPress={handleGoogleLogin}
             >
-              <Text style={[styles.buttonText, { color: "#fff" }]}>
-                Sign in with Google
-              </Text>
+              <Text style={[styles.buttonText, { color: "#fff" }]}>Sign in with Google</Text>
             </TouchableOpacity>
 
-            {/* Signup Redirect */}
+            {/* Signup */}
             <TouchableOpacity onPress={() => router.push("/signup")}>
               <Text style={[styles.forgot, { color: colors.text }]}>
                 Don’t have an account?{" "}
@@ -196,7 +213,6 @@ const LoginScreen = () => {
           </ScrollView>
         </LinearGradient>
 
-        {/* Footer Navigation */}
         <View style={styles.footer}>
           <List onNavigate={(p) => router.push(p)} />
         </View>
@@ -211,6 +227,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   bg: { flex: 1 },
   scroll: { padding: 20, flexGrow: 1 },
+
   title: {
     fontSize: 40,
     fontWeight: "800",
@@ -218,30 +235,44 @@ const styles = StyleSheet.create({
     marginTop: 90,
     marginBottom: 70,
   },
+
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 10,
     paddingHorizontal: 10,
-    marginBottom: 18,
+    marginBottom: 10,
     borderWidth: 1,
     marginTop: 10,
   },
+
   icon: { marginRight: 10 },
+
   input: {
     flex: 1,
     height: 48,
     fontSize: 15,
   },
+
+  errorText: {
+    color: "red",
+    marginBottom: 6,
+    marginLeft: 4,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+
   termsText: {
     fontSize: 12,
     textAlign: "center",
     marginBottom: 25,
     lineHeight: 18,
   },
+
   link: {
     textDecorationLine: "underline",
   },
+
   button: {
     borderRadius: 10,
     paddingVertical: 14,
@@ -249,16 +280,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 18,
   },
+
   buttonText: {
     fontWeight: "700",
     fontSize: 15,
     letterSpacing: 1,
   },
+
   forgot: {
     textAlign: "center",
     fontWeight: "700",
     letterSpacing: 0.5,
+    marginTop: 14,
   },
+
   footer: {
     flexShrink: 0,
     backgroundColor: "transparent",
