@@ -1,4 +1,4 @@
-// BMI.js (updated validation + user messages)
+// BMI.js (updated validation + user messages + fixed delete import)
 import React, { useState } from "react";
 import {
   View,
@@ -18,7 +18,7 @@ import List from "../components/List";
 import BmiResult from "../components/BmiResult";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
-import { createBMI, readBMIs } from "../services/BMIService"; // Import the service (adjust path)
+import { createBMI, readBMIs, deleteBMI } from "../services/BMIService"; // Added deleteBMI to import (adjust path if needed)
 
 const WEIGHT_MIN = 20;
 const WEIGHT_MAX = 200;
@@ -137,12 +137,13 @@ const BMI = () => {
 
   const handleDelete = async (id) => {
     try {
-      // if you have a deleteBMI function, import and use it; left as-is if you implement elsewhere
       await deleteBMI(id);
       const updatedHistory = await readBMIs();
       setHistory(updatedHistory.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      Alert.alert("Success", "Rekordi u fshi me sukses."); // Added success message
     } catch (error) {
       console.error("Error deleting BMI:", error);
+      Alert.alert("Gabim", "Nuk mund të fshihet rekordi. Kontrollo lidhjen ose rregullat e Firebase."); // Added error message
     }
   };
 
