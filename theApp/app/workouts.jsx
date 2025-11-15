@@ -373,26 +373,26 @@ const handleDeleteWorkout = async (workoutId) => {
 
             {/* Tabs */}
             <View style={[styles.toggleContainer, { backgroundColor: colors.card }]}>
-              {["Workouts", "Custom"].map((tab) => (
-                <TouchableOpacity
-                  key={tab}
-                  style={[
-                    styles.toggleButton,
-                    activeTab === tab && [styles.toggleActive, { backgroundColor: colors.primary }],
-                  ]}
-                  onPress={() => setActiveTab(tab)}
-                >
-                  <Text
-                    style={[
-                      styles.toggleText,
-                      { color: colors.text },
-                      activeTab === tab && styles.toggleTextActive,
-                    ]}
-                  >
-                    {tab}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {(isLoggedIn ? ["Workouts", "Custom"] : ["Workouts"]).map((tab) => (
+  <TouchableOpacity
+    key={tab}
+    style={[
+      styles.toggleButton,
+      activeTab === tab && [styles.toggleActive, { backgroundColor: colors.primary }],
+    ]}
+    onPress={() => setActiveTab(tab)}
+  >
+    <Text
+      style={[
+        styles.toggleText,
+        { color: colors.text },
+        activeTab === tab && styles.toggleTextActive,
+      ]}
+    >
+      {tab}
+    </Text>
+  </TouchableOpacity>
+))}
             </View>
 
             {/* Workouts List */}

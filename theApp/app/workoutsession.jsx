@@ -76,10 +76,8 @@ export default function WorkoutSession() {
       colors={["#001509", "#021f15", "#004422"]}
       style={styles.container}
     >
-      {/* Workout Title */}
       <Text style={styles.title}>{title}</Text>
 
-      {/* Sexy circular timer */}
       <View style={styles.timerContainer}>
         <View style={styles.timerCircle}>
           <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
@@ -114,7 +112,7 @@ export default function WorkoutSession() {
 
       {/* Completion Message */}
       {allDone && (
-        <Text style={styles.complete}>🔥 Workout Completed! 💪</Text>
+        <Text style={styles.complete}>Workout Completed!</Text>
       )}
 
       {/* Exit */}
@@ -124,11 +122,6 @@ export default function WorkoutSession() {
     </LinearGradient>
   );
 }
-
-// ------------------------------
-// SEXY STYLES
-// ------------------------------
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

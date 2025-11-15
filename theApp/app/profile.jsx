@@ -21,6 +21,7 @@ import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { logoutUser } from "../services/authService"; // ✅ we’ll use the service logout
+import { onSnapshot } from "firebase/firestore";
 
 const ProfileScreen = () => {
   const { colors, isDarkMode } = useTheme();
@@ -28,44 +29,55 @@ const ProfileScreen = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Listen for Auth state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          // 🔎 Try to fetch Firestore user document
-          const userRef = doc(db, "users", firebaseUser.uid);
-          const snap = await getDoc(userRef);
-
-          if (snap.exists()) {
-            const data = snap.data();
-            setUser({
-              uid: firebaseUser.uid,
-              fullName: `${data.firstName || ""} ${data.lastName || ""}`.trim() || "User",
-              email: data.email || firebaseUser.email,
-              photo: data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-            });
-          } else {
-            // 🔁 fallback to Auth data
-            setUser({
-              uid: firebaseUser.uid,
-              fullName: firebaseUser.displayName || "User",
-              email: firebaseUser.email,
-              photo: firebaseUser.photoURL || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-            });
-          }
-        } catch (err) {
-          console.error("🔥 Error fetching user data:", err);
-          Alert.alert("Error", "Failed to load your profile data.");
-        }
-      } else {
-        setUser(null);
-      }
+useEffect(() => {
+  const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+    if (!firebaseUser) {
+      setUser(null);
       setLoading(false);
-    });
+      return;
+    }
 
-    return unsubscribe;
-  }, []);
+    const userRef = doc(db, "users", firebaseUser.uid);
+
+    const unsubscribeFirestore = onSnapshot(
+      userRef,
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+
+          setUser({
+            uid: firebaseUser.uid,
+            fullName: `${data.firstName || ""} ${data.lastName || ""}`.trim() || "User",
+            email: data.email || firebaseUser.email,
+            photo: data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+            height: data.height || "",
+            weight: data.weight || "",
+          });
+        } else {
+          setUser({
+            uid: firebaseUser.uid,
+            fullName: firebaseUser.displayName || "User",
+            email: firebaseUser.email,
+            photo: firebaseUser.photoURL || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+            height: "",
+            weight: "",
+          });
+        }
+
+        setLoading(false);
+      },
+      (error) => {
+        console.error("🔥 Firestore real-time error:", error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribeFirestore();
+  });
+
+  return () => unsubscribeAuth();
+}, []);
+
 
   // 🔒 Logout
   const handleLogout = async () => {
@@ -74,7 +86,7 @@ const ProfileScreen = () => {
       setUser(null);
       router.replace("/login");
     } else {
-      Alert.alert("Logout Error", result.message);
+      showAlert("Logout Error", result.message);
     }
   };
 
@@ -157,9 +169,9 @@ const ProfileScreen = () => {
 
                 <TouchableOpacity
                   style={styles.optionButton}
-                  onPress={() => router.push("/settings")}
+                  onPress={() => router.push("/editProfile")}
                 >
-                  <Text style={styles.optionText}>Settings</Text>
+                  <Text style={styles.optionText}>Edit Profile</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
