@@ -1,3 +1,4 @@
+// BMI.js (updated validation + user messages + fixed delete import)
 import React, { useState } from "react";
 import {
   View,
@@ -8,13 +9,21 @@ import {
   StatusBar,
   Platform,
   TextInput,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
 import List from "../components/List";
+
 import BmiResult from "../components/BmiResult";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
+import { createBMI, readBMIs, deleteBMI } from "../services/BMIService"; // Added deleteBMI to import (adjust path if needed)
+
+const WEIGHT_MIN = 20;
+const WEIGHT_MAX = 200;
+const AGE_MIN = 10;
+const AGE_MAX = 100;
 
 const BMI = () => {
   const router = useRouter();
@@ -26,13 +35,99 @@ const BMI = () => {
   const [age, setAge] = useState("20");
   const [bmi, setBmi] = useState(null);
   const [showResult, setShowResult] = useState(false);
+  const [history, setHistory] = useState([]); // New state for BMI history
 
-  const handleCalculate = () => {
+  // Error states to show inline messages
+  const [weightError, setWeightError] = useState("");
+  const [ageError, setAgeError] = useState("");
+
+  // sanitize and update weight (allow digits and one dot)
+  const handleWeightChange = (text) => {
+    // remove all characters except digits and dot
+    let cleaned = text.replace(/[^0-9.]/g, "");
+    // allow only one dot
+    const parts = cleaned.split(".");
+    if (parts.length > 2) {
+      cleaned = parts[0] + "." + parts.slice(1).join("");
+    }
+    setWeight(cleaned);
+    if (weightError) setWeightError("");
+  };
+
+  // sanitize and update age (only digits, integer)
+  const handleAgeChange = (text) => {
+    const cleaned = text.replace(/[^0-9]/g, "");
+    setAge(cleaned);
+    if (ageError) setAgeError("");
+  };
+
+  const validateInputs = (w, a) => {
+    let valid = true;
+    setWeightError("");
+    setAgeError("");
+
+    if (isNaN(w) || w < WEIGHT_MIN || w > WEIGHT_MAX) {
+      setWeightError(`Pesha duhet të jetë midis ${WEIGHT_MIN} kg dhe ${WEIGHT_MAX} kg.`);
+      valid = false;
+    }
+    // ensure age is integer and within range
+    if (isNaN(a) || a < AGE_MIN || a > AGE_MAX || !Number.isInteger(a)) {
+      setAgeError(`Mosha duhet të jetë një numër i plotë midis ${AGE_MIN} dhe ${AGE_MAX} vjeç.`);
+      valid = false;
+    }
+
+    return valid;
+  };
+
+  const handleCalculate = async () => {
     const w = parseFloat(weight);
     const h = parseFloat(height);
-    if (isNaN(w) || isNaN(h) || h <= 0) return;
+    const a = parseInt(age, 10); // Ensure integer for age
+
+    if (isNaN(h) || h <= 0) {
+      Alert.alert("Invalid Height", "Please select a valid height.");
+      return;
+    }
+
+    const isValid = validateInputs(w, a);
+
+    if (!isValid) {
+      // Compose a friendly alert showing exactly what is wrong and the allowed ranges
+      let messages = [];
+      if (weightError) messages.push(`Pesha: ${weightError}`);
+      if (ageError) messages.push(`Mosha: ${ageError}`);
+      if (messages.length === 0) {
+        // fallback generic message
+        messages.push(
+          `Vlera e futur nuk është e shëndetshme. Pesha: ${WEIGHT_MIN}-${WEIGHT_MAX} kg. Mosha: ${AGE_MIN}-${AGE_MAX} vjeç.`
+        );
+      }
+      Alert.alert("Vlerë jo e mundur", messages.join("\n"));
+      return;
+    }
+
     const bmiValue = w / ((h / 100) ** 2);
-    setBmi(bmiValue.toFixed(1));
+    const bmiRounded = parseFloat(bmiValue.toFixed(1));
+    setBmi(bmiRounded);
+
+    try {
+      // Create record in Firebase
+      await createBMI({
+        gender,
+        height: h,
+        weight: w,
+        age: a,
+        bmi: bmiRounded,
+        date: new Date().toISOString(),
+      });
+
+      // Fetch updated history
+      const updatedHistory = await readBMIs();
+      setHistory(updatedHistory.sort((a, b) => new Date(b.date) - new Date(a.date))); // Sort by latest first
+    } catch (error) {
+      console.error("Error saving BMI:", error);
+    }
+
     setShowResult(true);
   };
 
@@ -40,19 +135,33 @@ const BMI = () => {
     setShowResult(false);
   };
 
-  // Nëse kemi rezultat, shfaq BmiResult komponentin
-  if (showResult && bmi) {
+  const handleDelete = async (id) => {
+    try {
+      await deleteBMI(id);
+      const updatedHistory = await readBMIs();
+      setHistory(updatedHistory.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      Alert.alert("Success", "Rekordi u fshi me sukses."); // Added success message
+    } catch (error) {
+      console.error("Error deleting BMI:", error);
+      Alert.alert("Gabim", "Nuk mund të fshihet rekordi. Kontrollo lidhjen ose rregullat e Firebase."); // Added error message
+    }
+  };
+
+  // If we have a result, show BmiResult component
+  if (showResult && bmi !== null) {
     return (
-      <BmiResult 
-        bmi={bmi} 
+      <BmiResult
+        bmi={bmi}
         onRecalculate={handleRecalculate}
+        history={history}
+        onDelete={handleDelete}
         colors={colors}
         isDarkMode={isDarkMode}
       />
     );
   }
 
-  // Kalkulatori normal
+  // Normal calculator
   return (
     <SafeAreaView
       style={[
@@ -69,7 +178,7 @@ const BMI = () => {
         translucent={false}
       />
 
-      <View style={{ flex: 1, marginTop:45 }}>
+      <View style={{ flex: 1, marginTop: 45 }}>
         <ScrollView
           contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
           showsVerticalScrollIndicator={false}
@@ -126,8 +235,12 @@ const BMI = () => {
                 ]}
                 keyboardType="numeric"
                 value={weight}
-                onChangeText={setWeight}
+                onChangeText={handleWeightChange}
+                placeholder={`${WEIGHT_MIN} - ${WEIGHT_MAX}`}
               />
+              {weightError ? (
+                <Text style={styles.errorText}>{weightError}</Text>
+              ) : null}
             </View>
 
             <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
@@ -139,8 +252,11 @@ const BMI = () => {
                 ]}
                 keyboardType="numeric"
                 value={age}
-                onChangeText={setAge}
+                onChangeText={handleAgeChange}
+                placeholder={`${AGE_MIN} - ${AGE_MAX}`}
+                maxLength={3}
               />
+              {ageError ? <Text style={styles.errorText}>{ageError}</Text> : null}
             </View>
           </View>
 
@@ -226,6 +342,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     paddingVertical: 5,
     marginTop: 10,
+  },
+  errorText: {
+    color: "red",
+    marginTop: 8,
+    textAlign: "center",
   },
   button: {
     padding: 15,
