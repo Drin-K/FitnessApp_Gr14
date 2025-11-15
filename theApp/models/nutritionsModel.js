@@ -1,44 +1,51 @@
-// models/nutritionModel.jsx
-
-// A simple model for how a nutrition plan looks in your Firestore
+// models/nutritionsModel.js
 export class NutritionGoal {
-  constructor({ name, calories, img = null, createdAt = Date.now() }) {
+  constructor({
+    name,
+    calories,
+    img = null,
+    originalName,
+    isActive = false,
+    createdAt = null,
+    createdAtReadable = null
+  }) {
     this.name = name;
     this.calories = calories;
     this.img = img;
+    this.originalName = originalName || name;
+    this.isActive = isActive;
     this.createdAt = createdAt;
-
-    // Format a readable date like "12 Nov 2025, 21:47"
-    const date = new Date(createdAt);
-    this.createdAtReadable = date.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    this.createdAtReadable = createdAtReadable;
   }
 }
 
-// Firestore converter (best practice)
 export const nutritionGoalConverter = {
-  toFirestore(goal) {
-    return {
+  toFirestore: (goal) => {
+    // Krijoni një objekt të pastër pa vlera undefined
+    const firestoreData = {
       name: goal.name,
       calories: goal.calories,
-      img: goal.img || null,
-      createdAt: goal.createdAt,
-      createdAtReadable: goal.createdAtReadable,
+      originalName: goal.originalName,
+      isActive: goal.isActive
     };
-  },
 
-  fromFirestore(snapshot) {
-    const data = snapshot.data();
-    return new NutritionGoal({
-      name: data.name,
-      calories: data.calories,
-      img: data.img,
-      createdAt: data.createdAt,
-    });
+    // Shtoni fushat opsionale vetëm nëse ekzistojnë
+    if (goal.img !== null && goal.img !== undefined) {
+      firestoreData.img = goal.img;
+    }
+
+    if (goal.createdAt !== null && goal.createdAt !== undefined) {
+      firestoreData.createdAt = goal.createdAt;
+    }
+
+    if (goal.createdAtReadable !== null && goal.createdAtReadable !== undefined) {
+      firestoreData.createdAtReadable = goal.createdAtReadable;
+    }
+
+    return firestoreData;
   },
+  fromFirestore: (snapshot, options) => {
+    const data = snapshot.data(options);
+    return new NutritionGoal(data);
+  }
 };
