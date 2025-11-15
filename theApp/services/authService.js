@@ -25,7 +25,28 @@ export const signUpUser = async (firstName, lastName, email, password) => {
     return { success: true, user };
   } catch (error) {
     console.error("❌ Error registering user:", error.message);
-    return { success: false, message: error.message };
+    
+    // Kthe mesazhe më të mira për përdoruesin
+    let userMessage = "Ndodhi një gabim. Ju lutem provoni përsëri.";
+    
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        userMessage = "Ky email është tashmë i regjistruar. Ju lutem përdorni një email tjetër ose hyni në llogarinë tuaj.";
+        break;
+      case "auth/invalid-email":
+        userMessage = "Email-i nuk është i vlefshëm. Ju lutem shkruani një email valid.";
+        break;
+      case "auth/weak-password":
+        userMessage = "Fjalëkalimi është shumë i dobët. Ju lutem zgjidhni një fjalëkalim më të fortë.";
+        break;
+      case "auth/network-request-failed":
+        userMessage = "Problem me lidhjen e internetit. Ju lutem kontrolloni lidhjen tuaj.";
+        break;
+      default:
+        userMessage = "Ndodhi një gabim. Ju lutem provoni përsëri.";
+    }
+    
+    return { success: false, message: userMessage, code: error.code };
   }
 };
 
@@ -36,7 +57,25 @@ export const loginUser = async (email, password) => {
     return { success: true, user: userCredential.user };
   } catch (error) {
     console.error("❌ Login error:", error.message);
-    return { success: false, message: error.message };
+    
+    let userMessage = "Email ose fjalëkalim i gabuar.";
+    
+    switch (error.code) {
+      case "auth/user-not-found":
+        userMessage = "Nuk ekziston llogari me këtë email. Ju lutem regjistrohuni.";
+        break;
+      case "auth/wrong-password":
+        userMessage = "Fjalëkalimi është i gabuar. Ju lutem provoni përsëri.";
+        break;
+      case "auth/invalid-email":
+        userMessage = "Email-i nuk është i vlefshëm.";
+        break;
+      case "auth/too-many-requests":
+        userMessage = "Shumë tentativa të dështuara. Ju lutem prisni pak dhe provoni përsëri.";
+        break;
+    }
+    
+    return { success: false, message: userMessage };
   }
 };
 
