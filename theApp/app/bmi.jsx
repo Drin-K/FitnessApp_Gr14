@@ -1,4 +1,3 @@
-// BMI.js (updated validation + user messages + fixed delete import)
 import React, { useState } from "react";
 import {
   View,
@@ -18,7 +17,7 @@ import List from "../components/List";
 import BmiResult from "../components/BmiResult";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
-import { createBMI, readBMIs, deleteBMI } from "../services/BMIService"; // Added deleteBMI to import (adjust path if needed)
+import { createBMI, readBMIs, deleteBMI } from "../services/BMIService"; 
 
 const WEIGHT_MIN = 20;
 const WEIGHT_MAX = 200;
@@ -35,7 +34,7 @@ const BMI = () => {
   const [age, setAge] = useState("20");
   const [bmi, setBmi] = useState(null);
   const [showResult, setShowResult] = useState(false);
-  const [history, setHistory] = useState([]); // New state for BMI history
+  const [history, setHistory] = useState([]); 
 
   // Error states to show inline messages
   const [weightError, setWeightError] = useState("");
@@ -45,7 +44,6 @@ const BMI = () => {
   const handleWeightChange = (text) => {
     // remove all characters except digits and dot
     let cleaned = text.replace(/[^0-9.]/g, "");
-    // allow only one dot
     const parts = cleaned.split(".");
     if (parts.length > 2) {
       cleaned = parts[0] + "." + parts.slice(1).join("");
@@ -82,7 +80,7 @@ const BMI = () => {
   const handleCalculate = async () => {
     const w = parseFloat(weight);
     const h = parseFloat(height);
-    const a = parseInt(age, 10); // Ensure integer for age
+    const a = parseInt(age, 10); 
 
     if (isNaN(h) || h <= 0) {
       Alert.alert("Invalid Height", "Please select a valid height.");
@@ -92,12 +90,10 @@ const BMI = () => {
     const isValid = validateInputs(w, a);
 
     if (!isValid) {
-      // Compose a friendly alert showing exactly what is wrong and the allowed ranges
       let messages = [];
       if (weightError) messages.push(`Pesha: ${weightError}`);
       if (ageError) messages.push(`Mosha: ${ageError}`);
       if (messages.length === 0) {
-        // fallback generic message
         messages.push(
           `Vlera e futur nuk është e shëndetshme. Pesha: ${WEIGHT_MIN}-${WEIGHT_MAX} kg. Mosha: ${AGE_MIN}-${AGE_MAX} vjeç.`
         );
@@ -111,7 +107,6 @@ const BMI = () => {
     setBmi(bmiRounded);
 
     try {
-      // Create record in Firebase
       await createBMI({
         gender,
         height: h,
@@ -123,7 +118,7 @@ const BMI = () => {
 
       // Fetch updated history
       const updatedHistory = await readBMIs();
-      setHistory(updatedHistory.sort((a, b) => new Date(b.date) - new Date(a.date))); // Sort by latest first
+      setHistory(updatedHistory.sort((a, b) => new Date(b.date) - new Date(a.date))); 
     } catch (error) {
       console.error("Error saving BMI:", error);
     }
@@ -140,10 +135,10 @@ const BMI = () => {
       await deleteBMI(id);
       const updatedHistory = await readBMIs();
       setHistory(updatedHistory.sort((a, b) => new Date(b.date) - new Date(a.date)));
-      Alert.alert("Success", "Rekordi u fshi me sukses."); // Added success message
+      Alert.alert("Success", "Rekordi u fshi me sukses."); 
     } catch (error) {
       console.error("Error deleting BMI:", error);
-      Alert.alert("Gabim", "Nuk mund të fshihet rekordi. Kontrollo lidhjen ose rregullat e Firebase."); // Added error message
+      Alert.alert("Gabim", "Nuk mund të fshihet rekordi. Kontrollo lidhjen ose rregullat e Firebase."); 
     }
   };
 
