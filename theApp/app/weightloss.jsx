@@ -5,37 +5,41 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 
-const mealPlans = {
+
+export const mealPlansWeightLoss = {
   Beginner: {
-    image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400",
-    description: "Perfect for those starting their weight loss journey",
-    calories: "1500-1700 kcal/day",
-    Breakfast: "Oatmeal with fruits and a cup of green tea",
-    Lunch: "Grilled chicken salad with olive oil dressing",
-    Dinner: "Baked salmon with steamed vegetables",
-    Snacks: "Almonds or Greek yogurt",
-    tips: ["Drink 2L water daily", "30min walk every day", "No sugary drinks"]
+    Breakfast: "2 boiled eggs, 1 slice whole grain toast, 1/2 avocado, green tea",
+    Lunch: "Grilled chicken salad (150g chicken, mixed greens, tomatoes, cucumber, olive oil dressing)",
+    Dinner: "Baked salmon (150g), steamed broccoli, quinoa (1/2 cup)",
+    Snacks: "Greek yogurt (150g), apple, handful of almonds",
+    tips: [
+      "Drink plenty of water throughout the day",
+      "Avoid sugary drinks and processed foods",
+      "Include protein in every meal to stay full longer"
+    ]
   },
   Intermediate: {
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
-    description: "For those with some experience in fitness",
-    calories: "1400-1600 kcal/day",
-    Breakfast: "Scrambled eggs with spinach and whole-grain toast",
-    Lunch: "Quinoa salad with chickpeas and vegetables",
-    Dinner: "Grilled turkey with roasted sweet potatoes",
-    Snacks: "Fruit smoothie or protein bar",
-    tips: ["Include strength training", "Track your macros", "Meal prep weekly"]
+    Breakfast: "3 egg whites + 1 whole egg omelette with spinach and mushrooms, 1 slice whole grain toast",
+    Lunch: "Turkey wrap (120g turkey, whole wheat tortilla, lettuce, tomato, mustard)",
+    Dinner: "Grilled white fish (200g), roasted vegetables, small sweet potato",
+    Snacks: "Protein shake, pear, carrot sticks with hummus",
+    tips: [
+      "Practice portion control",
+      "Track your calorie intake",
+      "Include healthy fats like avocado and nuts"
+    ]
   },
   Advanced: {
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400",
-    description: "For experienced individuals seeking optimal results",
-    calories: "1300-1500 kcal/day",
-    Breakfast: "Protein pancakes with berries",
-    Lunch: "Brown rice with grilled chicken and broccoli",
-    Dinner: "Lean beef stir-fry with vegetables",
-    Snacks: "Cottage cheese with nuts or hummus with carrots",
-    tips: ["High protein intake", "Intermittent fasting", "Regular cardio"]
-  },
+    Breakfast: "Protein smoothie (scoop of protein powder, 1/2 banana, spinach, almond milk)",
+    Lunch: "Quinoa bowl with grilled chicken (150g), mixed vegetables, tahini dressing",
+    Dinner: "Lean steak (150g), asparagus, cauliflower rice",
+    Snacks: "Cottage cheese, berries, celery with peanut butter",
+    tips: [
+      "Intermittent fasting 16:8",
+      "High protein, low carb approach",
+      "Meal prep for the week"
+    ]
+  }
 };
 
 const WeightLoss = () => {
@@ -77,7 +81,7 @@ const WeightLoss = () => {
     }).start();
   };
 
-  const currentPlan = mealPlans[selectedPlan];
+  const currentPlan = mealPlansWeightLoss[selectedPlan];
 
   // Gradient colors based on theme
   const gradientColors = isDarkMode 
@@ -107,7 +111,7 @@ const WeightLoss = () => {
 
         <Text style={[styles.sectionTitle, { color: colors.primary }]}>Choose Your Level</Text>
         <View style={styles.buttonContainer}>
-          {Object.keys(mealPlans).map((plan) => (
+          {Object.keys(mealPlansWeightLoss).map((plan) => (
             <TouchableOpacity
               key={plan}
               style={[
@@ -138,22 +142,6 @@ const WeightLoss = () => {
             </TouchableOpacity>
           ))}
         </View>
-
-        <Animated.View style={[styles.planCard, { transform: [{ scale: scaleAnim }] }]}>
-          <Image 
-            source={{ uri: currentPlan.image }} 
-            style={styles.planImage}
-            resizeMode="cover"
-          />
-          <View style={[styles.planOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.7)' }]}>
-            <Text style={[styles.planLevel, { color: colors.primary }]}>{selectedPlan} Plan</Text>
-            <Text style={[styles.planCalories, { color: colors.textSecondary }]}>{currentPlan.calories}</Text>
-          </View>
-        </Animated.View>
-
-        <Text style={[styles.planDescription, { color: colors.textSecondary }]}>
-          {currentPlan.description}
-        </Text>
 
         <View style={[
           styles.tabContainer, 
@@ -322,70 +310,41 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  
-buttonContainer: { 
-  flexDirection: "row", 
-  justifyContent: "space-between", 
-  marginBottom: 25,
-  minHeight: 50, 
-},
-
-
-planButton: { 
-  paddingVertical: 10,
-  paddingHorizontal: 8,
-  borderRadius: 25, 
-  borderWidth: 1, 
-  flex: 1,
-  marginHorizontal: 4, 
-  alignItems: 'center',
-  justifyContent: 'center', 
-  minWidth: 0, 
-},
-
-
-planButtonText: { 
-  fontWeight: "700", 
-  fontSize: 12, 
-  textAlign: 'center',
-  flexShrink: 1,
-},
-planButtonTextActive: {
-  fontWeight: "800",
-  fontSize: 12, 
-},
-
-  planCard: {
-    height: 200,
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 15,
-    position: 'relative',
+  buttonContainer: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    marginBottom: 25,
+    minHeight: 50, 
   },
-  planImage: {
-    width: '100%',
-    height: '100%',
+
+  planButton: { 
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 25, 
+    borderWidth: 1, 
+    flex: 1,
+    marginHorizontal: 4, 
+    alignItems: 'center',
+    justifyContent: 'center', 
+    minWidth: 0, 
   },
-  planOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 15,
+
+  planButtonActive: {
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  planLevel: {
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  planCalories: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  planDescription: {
-    fontSize: 14,
+
+  planButtonText: { 
+    fontWeight: "700", 
+    fontSize: 12, 
     textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 20,
+    flexShrink: 1,
+  },
+  planButtonTextActive: {
+    fontWeight: "800",
+    fontSize: 12, 
   },
 
   tabContainer: {
