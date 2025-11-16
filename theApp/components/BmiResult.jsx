@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -77,85 +76,74 @@ const BmiResult = ({
         BMI History
       </Text>
 
-      <View style={[styles.tableContainer, { borderColor: isDarkMode ? "#444" : "#ddd" }]}>
-        {/* HEADER */}
-        <View
-          style={[
-            styles.headerRow,
-            { backgroundColor: isDarkMode ? "#333" : "#eaeaea" },
-          ]}
-        >
-          <View style={styles.headerCellWrapper}>
-            <Text style={[styles.headerCellText, { color: colors.text }]}>
-              Date
-            </Text>
-          </View>
-          <View style={styles.headerCellWrapper}>
-            <Text style={[styles.headerCellText, { color: colors.text }]}>
-              Status
-            </Text>
-          </View>
-          <View style={styles.headerCellWrapper}>
-            <Text style={[styles.headerCellText, { color: colors.text }]}>
-              BMI
-            </Text>
-          </View>
-          <View style={styles.headerCellWrapperDel}>
-            <Text style={[styles.headerCellText, { color: colors.text }]}>
-              Del
-            </Text>
-          </View>
-        </View>
+      {/* HEADER */}
+      <View
+        style={[
+          styles.headerRow,
+          { backgroundColor: isDarkMode ? "#333" : "#eaeaea" },
+        ]}
+      >
+        <Text style={[styles.headerCell, styles.dateCell]}>
+          Date
+        </Text>
+        <Text style={[styles.headerCell, styles.statusCell]}>
+          Status
+        </Text>
+        <Text style={[styles.headerCell, styles.bmiCell]}>
+          BMI
+        </Text>
+        <Text style={[styles.headerCell, styles.actionCell]}>
+          Action
+        </Text>
+      </View>
 
-        {/* ROWS MANUALLY */}
-        <ScrollView style={{ maxHeight: 300 }}>
-          {history.length === 0 ? (
-            <View style={[styles.emptyRow, { backgroundColor: colors.card }]}>
-              <Text style={{ color: colors.textSecondary, textAlign: "center" }}>
-                No history yet.
-              </Text>
-            </View>
-          ) : (
-            history.map((item) => (
-              <View
-                key={item.id}
-                style={[styles.row, { backgroundColor: colors.card }]}
+      {/* ROWS MANUALLY */}
+      <View style={{ maxHeight: 300 }}>
+        {history.length === 0 && (
+          <View style={[styles.emptyRow, { backgroundColor: colors.card }]}>
+            <Text style={{ color: colors.textSecondary }}>No history yet.</Text>
+          </View>
+        )}
+
+        {history.map((item) => (
+          <View
+            key={item.id}
+            style={[styles.row, { backgroundColor: colors.card }]}
+          >
+            <Text style={[styles.cell, styles.dateCell, { color: colors.text }]}>
+              {new Date(item.date).toLocaleDateString()}
+            </Text>
+
+            <Text
+              style={[
+                styles.cell,
+                styles.statusCell,
+                { color: getStatusColor(item.bmi) },
+              ]}
+            >
+              {getStatus(item.bmi)}
+            </Text>
+
+            <Text style={[styles.cell, styles.bmiCell, { color: colors.text }]}>
+              {item.bmi}
+            </Text>
+
+            <View style={styles.actionCell}>
+              <TouchableOpacity
+                onPress={() => onDelete(item.id)}
+                style={[
+                  styles.delButton,
+                  { 
+                    borderColor: "#ff4d4d",
+                    backgroundColor: isDarkMode ? "transparent" : "transparent"
+                  }
+                ]}
               >
-                <View style={styles.cellWrapper}>
-                  <Text style={[styles.cellText, { color: colors.text }]}>
-                    {new Date(item.date).toLocaleDateString()}
-                  </Text>
-                </View>
-
-                <View style={styles.cellWrapper}>
-                  <Text
-                    style={[
-                      styles.cellText,
-                      { color: getStatusColor(item.bmi) },
-                    ]}
-                  >
-                    {getStatus(item.bmi)}
-                  </Text>
-                </View>
-
-                <View style={styles.cellWrapper}>
-                  <Text style={[styles.cellText, { color: colors.text }]}>
-                    {item.bmi}
-                  </Text>
-                </View>
-
-                <View style={styles.cellWrapperDel}>
-                  <TouchableOpacity
-                    onPress={() => onDelete(item.id)}
-                    style={styles.delButton}
-                  >
-                    <Text style={styles.delText}>🗑️</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))
-          )}
-        </ScrollView>
+                <Text style={styles.delText}>X</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
       </View>
     </SafeAreaView>
   );
@@ -184,63 +172,83 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 
   // Table
-  tableTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
-  tableContainer: {
-    borderWidth: 1,
-    borderRadius: 10,
-    overflow: "hidden",
+  tableTitle: { 
+    fontSize: 22, 
+    fontWeight: "bold", 
+    marginBottom: 15,
+    textAlign: "center"
   },
-  headerRow: { flexDirection: "row" },
-  headerCellWrapper: {
-    flex: 1,
+  
+  headerRow: { 
+    flexDirection: "row", 
     paddingVertical: 12,
-    justifyContent: "center",
     alignItems: "center",
   },
-  headerCellWrapperDel: {
-    flex: 0.8,
-    paddingVertical: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerCellText: {
-    fontSize: 14,
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-
+  
   row: {
     flexDirection: "row",
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: "#ddd",
-  },
-  cellWrapper: {
-    flex: 1,
-    paddingVertical: 12,
-    justifyContent: "center",
     alignItems: "center",
   },
-  cellWrapperDel: {
+  
+  // Cell styles with fixed widths
+  headerCell: {
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  
+  cell: {
+    fontSize: 14,
+    textAlign: "center",
+  },
+  
+  dateCell: {
+    flex: 1.2,
+    textAlign: "center",
+  },
+  
+  statusCell: {
+    flex: 1.2,
+    textAlign: "center",
+  },
+  
+  bmiCell: {
     flex: 0.8,
-    justifyContent: "center",
-    alignItems: "center",
+    textAlign: "center",
   },
-  cellText: { fontSize: 14, textAlign: "center" },
+  
+  actionCell: {
+    flex: 0.8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
   delButton: {
-    padding: 5,
-    borderRadius: 8,
-    backgroundColor: "#fee",
+    backgroundColor: "transparent",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#f44336",
-  },
-  delText: { color: "#f44336", fontSize: 16, fontWeight: "bold" },
-
-  emptyRow: {
-    flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
-    padding: 15,
+    justifyContent: "center",
+    height: 30,
+    width: 30,
+  },
+  
+  delText: { 
+    color: "#ff4d4d", 
+    fontWeight: "700", 
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 16,
+  },
+
+  emptyRow: { 
+    padding: 15, 
+    alignItems: "center" 
   },
 });
 

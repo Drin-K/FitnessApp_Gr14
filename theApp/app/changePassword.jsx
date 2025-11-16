@@ -135,7 +135,7 @@ const ChangePassword = () => {
       } else {
         setErrors((prev) => ({
           ...prev,
-          newPassword: "An error occurred while updating your password.",
+          currentPassword: "Something went wrong. Please re-try.",
         }));
       }
     }
@@ -177,7 +177,9 @@ const ChangePassword = () => {
                 onChangeText={(t) => updateField("currentPassword", t)}
                 style={{
                   borderColor: errors.currentPassword ? "red" : colors.border,
-                  height: 35,
+                  height: 40,
+                  width:420,
+                  color: "#fff"
                 }}
               />
               {errors.currentPassword ? (
@@ -195,7 +197,9 @@ const ChangePassword = () => {
                 onChangeText={(t) => updateField("newPassword", t)}
                 style={{
                   borderColor: errors.newPassword ? "red" : colors.border,
-                  height: 35,
+                  height: 40,
+                  width:420,
+                  color: "#fff"
                 }}
               />
               {errors.newPassword ? (
@@ -213,7 +217,9 @@ const ChangePassword = () => {
                 onChangeText={(t) => updateField("confirmPassword", t)}
                 style={{
                   borderColor: errors.confirmPassword ? "red" : colors.border,
-                  height: 35,
+                  height: 40,
+                  width:420,
+                  color: "#fff"
                 }}
               />
               {errors.confirmPassword ? (

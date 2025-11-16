@@ -34,6 +34,7 @@ const BMI = () => {
   const [weight, setWeight] = useState("60");
   const [age, setAge] = useState("20");
   const [bmi, setBmi] = useState(null);
+  const [hasGenderError, setHasGenderError] = useState(false); // Shtu këtë
 
   const [history, setHistory] = useState([]);
 
@@ -64,6 +65,13 @@ const BMI = () => {
   };
 
   const validateInputs = (w, a) => {
+    // Shto validimin për gjininë
+    if (!gender) {
+      setHasGenderError(true);
+      Alert.alert("Error", "Please select a gender");
+      return false;
+    }
+    
     if (isNaN(w) || w < WEIGHT_MIN || w > WEIGHT_MAX) {
       Alert.alert("Error", `Weight must be between ${WEIGHT_MIN} and ${WEIGHT_MAX}`);
       return false;
@@ -73,6 +81,12 @@ const BMI = () => {
       return false;
     }
     return true;
+  };
+
+  // Reset gender error kur zgjedh gjininë
+  const handleGenderSelect = (selectedGender) => {
+    setGender(selectedGender);
+    setHasGenderError(false); // Fshi error-in kur zgjedh gjininë
   };
 
   // CALCULATE BMI
@@ -132,8 +146,9 @@ const BMI = () => {
               styles.genderBox,
               { backgroundColor: colors.card },
               gender === "male" && [styles.activeGender, { borderColor: colors.primary }],
+              hasGenderError && !gender && styles.genderError, // Shtu këtë
             ]}
-            onPress={() => setGender("male")}
+            onPress={() => handleGenderSelect("male")}
           >
             <Text style={[styles.genderText, { color: colors.text }]}>♂ Male</Text>
           </TouchableOpacity>
@@ -143,12 +158,18 @@ const BMI = () => {
               styles.genderBox,
               { backgroundColor: colors.card },
               gender === "female" && [styles.activeGender, { borderColor: colors.primary }],
+              hasGenderError && !gender && styles.genderError, // Shtu këtë
             ]}
-            onPress={() => setGender("female")}
+            onPress={() => handleGenderSelect("female")}
           >
             <Text style={[styles.genderText, { color: colors.text }]}>♀ Female</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Shfaq error message nëse ka gabim */}
+        {hasGenderError && !gender && (
+          <Text style={styles.errorText}>Please select a gender</Text>
+        )}
 
         {/* Height */}
         <View style={[styles.sliderBox, { backgroundColor: colors.card }]}>
@@ -197,41 +218,44 @@ const BMI = () => {
           <Text style={styles.buttonText}>Calculate BMI</Text>
         </TouchableOpacity>
 
-        {/* GUEST → show only result */}
-        {!isLoggedUser && bmi !== null && (
+        {/* SHOW BMI RESULT OR GENDER ERROR */}
+        {bmi !== null && (
           <View style={{ marginTop: 30 }}>
             <BmiResult
               bmi={bmi}
-              history={[]}
-              onDelete={() => {}}
+              history={history}
+              onDelete={handleDelete}
               onRecalculate={() => setBmi(null)}
               colors={colors}
               isDarkMode={isDarkMode}
-              isLoggedUser={false}
+              isLoggedUser={isLoggedUser}
+              selectedGender={gender}
+              hasGenderError={hasGenderError && !gender} // Dërro këtë
             />
           </View>
         )}
 
         {/* LOGGED USER ALWAYS SEES TABLE */}
-        {isLoggedUser && (
+        {isLoggedUser && bmi === null && (
           <View style={{ marginTop: 30 }}>
             <BmiResult
-              bmi={bmi} // ignored in logged mode
+              bmi={bmi}
               history={history}
               onDelete={handleDelete}
               onRecalculate={() => setBmi(null)}
               colors={colors}
               isDarkMode={isDarkMode}
               isLoggedUser={true}
+              selectedGender={gender}
+              hasGenderError={hasGenderError && !gender} // Dërro këtë
             />
           </View>
         )}
       </ScrollView>
 
-     <View style={styles.footer}>
-  <List onNavigate={(p) => router.push(p)} />
-</View>
-
+      <View style={styles.footer}>
+        <List onNavigate={(p) => router.push(p)} />
+      </View>
     </SafeAreaView>
   );
 };
@@ -248,8 +272,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   activeGender: { borderWidth: 2 },
+  genderError: { // Shtu këtë
+    borderWidth: 2,
+    borderColor: "#F44336",
+  },
   genderText: { fontSize: 18 },
-
+  errorText: { // Shtu këtë
+    color: "#F44336",
+    fontSize: 14,
+    marginTop: 5,
+    textAlign: "center",
+  },
   sliderBox: {
     width: "100%",
     borderRadius: 10,
@@ -291,10 +324,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   footer: {
-  flexShrink: 0,
-  backgroundColor: "transparent",
-}
-
+    flexShrink: 0,
+    backgroundColor: "transparent",
+  }
 });
 
 export default BMI;
