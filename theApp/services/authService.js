@@ -8,13 +8,13 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 
-// 🧩 Regjistrimi i përdoruesit
+// 🧩 User Registration
 export const signUpUser = async (firstName, lastName, email, password) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Ruaj të dhënat shtesë në Firestore
+    // Save extra profile fields in Firestore
     await setDoc(doc(db, "users", user.uid), {
       firstName,
       lastName,
@@ -24,62 +24,61 @@ export const signUpUser = async (firstName, lastName, email, password) => {
 
     return { success: true, user };
   } catch (error) {
-    console.error("❌ Error registering user:", error.message);
-    
-    // Kthe mesazhe më të mira për përdoruesin
-    let userMessage = "Ndodhi një gabim. Ju lutem provoni përsëri.";
-    
+    console.error("❌ Registration error:", error.message);
+
+    let userMessage = "Something went wrong. Please try again.";
+
     switch (error.code) {
       case "auth/email-already-in-use":
-        userMessage = "Ky email është tashmë i regjistruar. Ju lutem përdorni një email tjetër ose hyni në llogarinë tuaj.";
+        userMessage = "This email is already in use.";
         break;
       case "auth/invalid-email":
-        userMessage = "Email-i nuk është i vlefshëm. Ju lutem shkruani një email valid.";
+        userMessage = "Please enter a valid email.";
         break;
       case "auth/weak-password":
-        userMessage = "Fjalëkalimi është shumë i dobët. Ju lutem zgjidhni një fjalëkalim më të fortë.";
+        userMessage = "Password is too weak.";
         break;
       case "auth/network-request-failed":
-        userMessage = "Problem me lidhjen e internetit. Ju lutem kontrolloni lidhjen tuaj.";
+        userMessage = "Network error. Check your connection.";
         break;
       default:
-        userMessage = "Ndodhi një gabim. Ju lutem provoni përsëri.";
+        userMessage = "Something went wrong. Please try again.";
     }
-    
+
     return { success: false, message: userMessage, code: error.code };
   }
 };
 
-// 🔑 Hyrja e përdoruesit
+// 🔑 User Login
 export const loginUser = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { success: true, user: userCredential.user };
   } catch (error) {
     console.error("❌ Login error:", error.message);
-    
-    let userMessage = "Email ose fjalëkalim i gabuar.";
-    
+
+    let userMessage = "Invalid email or password.";
+
     switch (error.code) {
       case "auth/user-not-found":
-        userMessage = "Nuk ekziston llogari me këtë email. Ju lutem regjistrohuni.";
+        userMessage = "No account found with this email.";
         break;
       case "auth/wrong-password":
-        userMessage = "Fjalëkalimi është i gabuar. Ju lutem provoni përsëri.";
+        userMessage = "Incorrect password.";
         break;
       case "auth/invalid-email":
-        userMessage = "Email-i nuk është i vlefshëm.";
+        userMessage = "Please enter a valid email.";
         break;
       case "auth/too-many-requests":
-        userMessage = "Shumë tentativa të dështuara. Ju lutem prisni pak dhe provoni përsëri.";
+        userMessage = "Too many attempts. Try again later.";
         break;
     }
-    
+
     return { success: false, message: userMessage };
   }
 };
 
-// 🚪 Dalja (logout)
+// 🚪 Logout
 export const logoutUser = async () => {
   try {
     await signOut(auth);
@@ -89,7 +88,7 @@ export const logoutUser = async () => {
   }
 };
 
-// 👀 Kontrolli i përdoruesit aktiv
+// 👀 Auth state listener
 export const subscribeToAuthChanges = (callback) => {
   return onAuthStateChanged(auth, callback);
 };

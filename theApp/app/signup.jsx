@@ -57,7 +57,7 @@ const Signup = () => {
       valid = false;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|net|org|info)$/i;
     if (!emailRegex.test(formData.email)) {
       newErrors.email = "Please enter a valid email.";
       valid = false;
@@ -141,6 +141,7 @@ const Signup = () => {
                 style={{
                   borderColor: errors.fullName ? "red" : colors.border,
                   height: 40,
+                  width:420,
                   color: "#fff",
                 }}
               />
@@ -159,6 +160,7 @@ const Signup = () => {
                 style={{
                   borderColor: errors.email ? "red" : colors.border,
                   height: 40,
+                  width:420,
                   color: "#fff",
                 }}
               />
@@ -176,6 +178,7 @@ const Signup = () => {
                 style={{
                   borderColor: errors.password ? "red" : colors.border,
                   height: 40,
+                  width:420,
                   color: "#fff",
                 }}
               />
@@ -193,6 +196,7 @@ const Signup = () => {
                 style={{
                   borderColor: errors.confirmPassword ? "red" : colors.border,
                   height: 40,
+                  width:420,
                   color: "#fff",
                 }}
               />
