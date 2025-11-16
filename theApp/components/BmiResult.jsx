@@ -56,13 +56,6 @@ const BmiResult = ({
             ? "You have a normal body weight. Good job!"
             : "Based on your BMI value, consider adjusting diet or exercise."}
         </Text>
-
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={onRecalculate}
-        >
-          <Text style={styles.buttonText}>Recalculate</Text>
-        </TouchableOpacity>
       </View>
     );
   }
