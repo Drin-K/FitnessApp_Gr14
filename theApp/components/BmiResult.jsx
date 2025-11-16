@@ -83,17 +83,17 @@ const BmiResult = ({
           { backgroundColor: isDarkMode ? "#333" : "#eaeaea" },
         ]}
       >
-        <Text style={[styles.headerCell, { flex: 1, color: colors.text }]}>
+        <Text style={[styles.headerCell, styles.dateCell]}>
           Date
         </Text>
-        <Text style={[styles.headerCell, { flex: 1, color: colors.text }]}>
+        <Text style={[styles.headerCell, styles.statusCell]}>
           Status
         </Text>
-        <Text style={[styles.headerCell, { flex: 1, color: colors.text }]}>
+        <Text style={[styles.headerCell, styles.bmiCell]}>
           BMI
         </Text>
-        <Text style={[styles.headerCell, { flex: 0.8, color: colors.text }]}>
-          Del
+        <Text style={[styles.headerCell, styles.actionCell]}>
+          Action
         </Text>
       </View>
 
@@ -110,29 +110,38 @@ const BmiResult = ({
             key={item.id}
             style={[styles.row, { backgroundColor: colors.card }]}
           >
-            <Text style={[styles.cell, { flex: 1, color: colors.text }]}>
+            <Text style={[styles.cell, styles.dateCell, { color: colors.text }]}>
               {new Date(item.date).toLocaleDateString()}
             </Text>
 
             <Text
               style={[
                 styles.cell,
-                { flex: 1, color: getStatusColor(item.bmi) },
+                styles.statusCell,
+                { color: getStatusColor(item.bmi) },
               ]}
             >
               {getStatus(item.bmi)}
             </Text>
 
-            <Text style={[styles.cell, { flex: 1, color: colors.text }]}>
+            <Text style={[styles.cell, styles.bmiCell, { color: colors.text }]}>
               {item.bmi}
             </Text>
 
-            <TouchableOpacity
-              onPress={() => onDelete(item.id)}
-              style={styles.delButton}
-            >
-              <Text style={styles.delText}>🗑️</Text>
-            </TouchableOpacity>
+            <View style={styles.actionCell}>
+              <TouchableOpacity
+                onPress={() => onDelete(item.id)}
+                style={[
+                  styles.delButton,
+                  { 
+                    borderColor: "#ff4d4d",
+                    backgroundColor: isDarkMode ? "transparent" : "transparent"
+                  }
+                ]}
+              >
+                <Text style={styles.delText}>X</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ))}
       </View>
@@ -163,10 +172,19 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 
   // Table
-  tableTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
-  headerRow: { flexDirection: "row", paddingVertical: 12 },
-  headerCell: { fontSize: 14, textAlign: "center", fontWeight: "bold" },
-
+  tableTitle: { 
+    fontSize: 22, 
+    fontWeight: "bold", 
+    marginBottom: 15,
+    textAlign: "center"
+  },
+  
+  headerRow: { 
+    flexDirection: "row", 
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  
   row: {
     flexDirection: "row",
     paddingVertical: 12,
@@ -174,19 +192,64 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     alignItems: "center",
   },
-  cell: { fontSize: 14, textAlign: "center" },
+  
+  // Cell styles with fixed widths
+  headerCell: {
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  
+  cell: {
+    fontSize: 14,
+    textAlign: "center",
+  },
+  
+  dateCell: {
+    flex: 1.2,
+    textAlign: "center",
+  },
+  
+  statusCell: {
+    flex: 1.2,
+    textAlign: "center",
+  },
+  
+  bmiCell: {
+    flex: 0.8,
+    textAlign: "center",
+  },
+  
+  actionCell: {
+    flex: 0.8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
   delButton: {
-    padding: 5,
-    borderRadius: 8,
-    backgroundColor: "#fee",
+    backgroundColor: "transparent",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#f44336",
-    marginRight: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 30,
+    width: 30,
   },
-  delText: { color: "#f44336", fontSize: 16, fontWeight: "bold" },
+  
+  delText: { 
+    color: "#ff4d4d", 
+    fontWeight: "700", 
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 16,
+  },
 
-  emptyRow: { padding: 15, alignItems: "center" },
+  emptyRow: { 
+    padding: 15, 
+    alignItems: "center" 
+  },
 });
 
 export default BmiResult;
