@@ -12,20 +12,16 @@ const LayoutContent = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // Routing i rregulluar — pa loops, pa logout fake
+ 
   React.useEffect(() => {
-    if (loading) return; // MOS REDIRECTO deri sa Firebase ta konfirmon gjendjen
-
+    if (loading) return; 
     if (user) {
-      // Nëse user është i kyçur → shko në Home
       router.replace("/");
     } else {
-      // Nëse user nuk është i kyçur → shko në Login
-      router.replace("/login");
+       router.replace("/login");
     }
   }, [loading, user]);
 
-  // Loading screen derisa Firebase Auth të përgjigjet
   if (loading) {
     return (
       <View style={styles.loadingContainer}>

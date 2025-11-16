@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   Platform,
   KeyboardAvoidingView,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
-import InputField from "../components/InputField";
 import { useRouter } from "expo-router";
 import { auth } from "../firebase";
 import {
@@ -169,18 +169,21 @@ const ChangePassword = () => {
 
             {/* CURRENT PASSWORD */}
             <View style={styles.inputWrap}>
-              <InputField
-                label="Current Password"
+              <Text style={[styles.label, { color: colors.text }]}>Current Password</Text>
+              <TextInput
                 placeholder="Enter current password"
+                placeholderTextColor="#888"
                 secureTextEntry
+                style={[
+                  styles.input,
+                  { 
+                    borderColor: errors.currentPassword ? "red" : colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card
+                  }
+                ]}
                 value={formData.currentPassword}
                 onChangeText={(t) => updateField("currentPassword", t)}
-                style={{
-                  borderColor: errors.currentPassword ? "red" : colors.border,
-                  height: 40,
-                  width:420,
-                  color: "#fff"
-                }}
               />
               {errors.currentPassword ? (
                 <Text style={styles.errorText}>{errors.currentPassword}</Text>
@@ -189,18 +192,21 @@ const ChangePassword = () => {
 
             {/* NEW PASSWORD */}
             <View style={styles.inputWrap}>
-              <InputField
-                label="New Password"
+              <Text style={[styles.label, { color: colors.text }]}>New Password</Text>
+              <TextInput
                 placeholder="Enter new password"
+                placeholderTextColor="#888"
                 secureTextEntry
+                style={[
+                  styles.input,
+                  { 
+                    borderColor: errors.newPassword ? "red" : colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card
+                  }
+                ]}
                 value={formData.newPassword}
                 onChangeText={(t) => updateField("newPassword", t)}
-                style={{
-                  borderColor: errors.newPassword ? "red" : colors.border,
-                  height: 40,
-                  width:420,
-                  color: "#fff"
-                }}
               />
               {errors.newPassword ? (
                 <Text style={styles.errorText}>{errors.newPassword}</Text>
@@ -209,18 +215,21 @@ const ChangePassword = () => {
 
             {/* CONFIRM PASSWORD */}
             <View style={styles.inputWrap}>
-              <InputField
-                label="Confirm Password"
+              <Text style={[styles.label, { color: colors.text }]}>Confirm Password</Text>
+              <TextInput
                 placeholder="Confirm new password"
+                placeholderTextColor="#888"
                 secureTextEntry
+                style={[
+                  styles.input,
+                  { 
+                    borderColor: errors.confirmPassword ? "red" : colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card
+                  }
+                ]}
                 value={formData.confirmPassword}
                 onChangeText={(t) => updateField("confirmPassword", t)}
-                style={{
-                  borderColor: errors.confirmPassword ? "red" : colors.border,
-                  height: 40,
-                  width:420,
-                  color: "#fff"
-                }}
               />
               {errors.confirmPassword ? (
                 <Text style={styles.errorText}>{errors.confirmPassword}</Text>
@@ -254,25 +263,45 @@ const styles = StyleSheet.create({
   backButton: { marginBottom: 10 },
   backText: { fontSize: 16, fontWeight: "600" },
 
-  header: { alignItems: "center", marginTop: 50 },
+  header: { alignItems: "center", marginTop: 100 },
   title: { fontSize: 32, fontWeight: "900" },
   subtitle: { fontSize: 14, marginTop: 5 },
 
-  formContainer: { width: "100%", marginTop: 45 },
-  inputWrap: { marginBottom: 18, height: 70 },
-
+  formContainer: { 
+    width: "100%", 
+    marginTop: 25 
+  },
+  inputWrap: { 
+    marginBottom: 20 
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    fontSize: 16,
+  },
   errorText: {
     color: "red",
-    marginTop: -20,
     fontSize: 13,
     fontWeight: "500",
+    marginTop: 5,
   },
 
   button: {
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: "center",
     marginTop: 10,
   },
-  buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  buttonText: { 
+    color: "#fff", 
+    fontWeight: "700", 
+    fontSize: 16 
+  },
 });

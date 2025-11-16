@@ -237,6 +237,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     lineHeight: 16,
+    margin:-3
   },
 
   emptyRow: { 

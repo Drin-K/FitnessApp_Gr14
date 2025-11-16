@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   Platform,
   KeyboardAvoidingView,
+  TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
-import InputField from "../components/InputField";
 import { signUpUser } from "../services/authService";
 
 const Signup = () => {
@@ -120,11 +120,10 @@ const Signup = () => {
           </TouchableOpacity>
 
           {/* Header */}
-          <View style={styles.headerWrap}>
-            <Text style={[styles.topTitle, { color: colors.primary }]}>ILLYRIAN GYM</Text>
-            <Text style={[styles.welcomeText, { color: colors.text }]}>Join Our Community</Text>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.primary }]}>Create Account</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Create your account and start your fitness journey
+              Join our community and start your fitness journey
             </Text>
           </View>
 
@@ -133,72 +132,84 @@ const Signup = () => {
 
             {/* FULL NAME */}
             <View style={styles.inputWrap}>
-              <InputField
-                label="Full Name"
+              <Text style={[styles.label, { color: colors.text }]}>Full Name</Text>
+              <TextInput
                 placeholder="Enter your full name"
+                placeholderTextColor="#888"
+                style={[
+                  styles.input,
+                  { 
+                    borderColor: errors.fullName ? "red" : colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card
+                  }
+                ]}
                 value={formData.fullName}
                 onChangeText={(t) => updateFormData("fullName", t)}
-                style={{
-                  borderColor: errors.fullName ? "red" : colors.border,
-                  height: 40,
-                  width:420,
-                  color: "#fff",
-                }}
               />
               {errors.fullName ? <Text style={styles.errorText}>{errors.fullName}</Text> : null}
             </View>
 
             {/* EMAIL */}
             <View style={styles.inputWrap}>
-              <InputField
-                label="Email"
+              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+              <TextInput
                 placeholder="Enter your email"
-                value={formData.email}
-                onChangeText={(t) => updateFormData("email", t)}
+                placeholderTextColor="#888"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                style={{
-                  borderColor: errors.email ? "red" : colors.border,
-                  height: 40,
-                  width:420,
-                  color: "#fff",
-                }}
+                style={[
+                  styles.input,
+                  { 
+                    borderColor: errors.email ? "red" : colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card
+                  }
+                ]}
+                value={formData.email}
+                onChangeText={(t) => updateFormData("email", t)}
               />
               {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
             </View>
 
             {/* PASSWORD */}
             <View style={styles.inputWrap}>
-              <InputField
-                label="Password"
+              <Text style={[styles.label, { color: colors.text }]}>Password</Text>
+              <TextInput
                 placeholder="Create a password"
+                placeholderTextColor="#888"
                 secureTextEntry
+                style={[
+                  styles.input,
+                  { 
+                    borderColor: errors.password ? "red" : colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card
+                  }
+                ]}
                 value={formData.password}
                 onChangeText={(t) => updateFormData("password", t)}
-                style={{
-                  borderColor: errors.password ? "red" : colors.border,
-                  height: 40,
-                  width:420,
-                  color: "#fff",
-                }}
               />
               {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
             </View>
 
             {/* CONFIRM PASSWORD */}
             <View style={styles.inputWrap}>
-              <InputField
-                label="Confirm Password"
+              <Text style={[styles.label, { color: colors.text }]}>Confirm Password</Text>
+              <TextInput
                 placeholder="Confirm your password"
+                placeholderTextColor="#888"
                 secureTextEntry
+                style={[
+                  styles.input,
+                  { 
+                    borderColor: errors.confirmPassword ? "red" : colors.border,
+                    color: colors.text,
+                    backgroundColor: colors.card
+                  }
+                ]}
                 value={formData.confirmPassword}
                 onChangeText={(t) => updateFormData("confirmPassword", t)}
-                style={{
-                  borderColor: errors.confirmPassword ? "red" : colors.border,
-                  height: 40,
-                  width:420,
-                  color: "#fff",
-                }}
               />
               {errors.confirmPassword ? (
                 <Text style={styles.errorText}>{errors.confirmPassword}</Text>
@@ -207,10 +218,10 @@ const Signup = () => {
 
             {/* BUTTON */}
             <TouchableOpacity
-              style={[styles.signupButton, { backgroundColor: colors.primary }]}
+              style={[styles.button, { backgroundColor: colors.primary }]}
               onPress={handleSignup}
             >
-              <Text style={styles.signupButtonText}>Create Account</Text>
+              <Text style={styles.buttonText}>Create Account</Text>
             </TouchableOpacity>
 
             {/* DIVIDER */}
@@ -245,48 +256,79 @@ export default Signup;
 const styles = StyleSheet.create({
   container: { flex: 1 },
   keyboardAvoid: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 20 },
+  scroll: { flexGrow: 1, padding: 24 },
 
-  backButton: { alignSelf: "flex-start", marginBottom: 20, paddingVertical: 8 },
+  backButton: { marginBottom: 10 },
   backText: { fontSize: 16, fontWeight: "600" },
 
-  headerWrap: { alignItems: "center", marginBottom: 40 },
-  topTitle: {
-    fontSize: 32,
-    fontWeight: "900",
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    marginBottom: 10,
+  header: { alignItems: "center", marginTop: 50 },
+  title: { fontSize: 32, fontWeight: "900" },
+  subtitle: { fontSize: 14, marginTop: 5, textAlign: "center" },
+
+  formContainer: { 
+    width: "100%", 
+    marginTop: 30 
   },
-  welcomeText: { fontSize: 28, fontWeight: "800", marginBottom: 8, textAlign: "center" },
-  subtitle: { fontSize: 14, textAlign: "center", lineHeight: 20 },
-
-  formContainer: { width: "100%", marginTop: 20 },
-
-  inputWrap: { marginBottom: 18, height: 70 },
-
+  inputWrap: { 
+    marginBottom: 20 
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    fontSize: 16,
+  },
   errorText: {
     color: "red",
-    marginTop: -20,
-    marginLeft: 4,
     fontSize: 13,
     fontWeight: "500",
+    marginTop: 5,
   },
 
-  signupButton: {
-    paddingVertical: 16,
-    borderRadius: 12,
+  button: {
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: "center",
     marginTop: 10,
-    marginBottom: 30,
+    marginBottom: 20,
   },
-  signupButtonText: { color: "#fff", fontSize: 16, fontWeight: "800" },
+  buttonText: { 
+    color: "#fff", 
+    fontWeight: "700", 
+    fontSize: 16 
+  },
 
-  divider: { flexDirection: "row", alignItems: "center", marginBottom: 30 },
-  dividerLine: { flex: 1, height: 1 },
-  dividerText: { paddingHorizontal: 15, fontSize: 15, fontWeight: "600", textAlign: "center" },
+  divider: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginBottom: 20 
+  },
+  dividerLine: { 
+    flex: 1, 
+    height: 1 
+  },
+  dividerText: { 
+    paddingHorizontal: 15, 
+    fontSize: 14, 
+    fontWeight: "600" 
+  },
 
-  loginRedirect: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
-  loginText: { fontSize: 14 },
-  loginLink: { fontSize: 14, fontWeight: "700" },
+  loginRedirect: { 
+    flexDirection: "row", 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
+  loginText: { 
+    fontSize: 14 
+  },
+  loginLink: { 
+    fontSize: 14, 
+    fontWeight: "700" 
+  },
 });

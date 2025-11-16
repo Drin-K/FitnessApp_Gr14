@@ -262,8 +262,8 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: "800",
     textAlign: "center",
-    marginTop: 90,
-    marginBottom: 70,
+    marginTop: 140,
+    marginBottom: 40,
   },
 
   inputContainer: {

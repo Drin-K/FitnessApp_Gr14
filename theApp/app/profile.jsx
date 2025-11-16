@@ -262,6 +262,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 40,
     lineHeight: 28,
+    marginTop:80
   },
   buttonGroup: { 
     alignItems: "center",
