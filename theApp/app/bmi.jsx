@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,8 @@ import List from "../components/List";
 import BmiResult from "../components/BmiResult";
 import { useRouter } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
-import { createBMI, readBMIs, deleteBMI } from "../services/BMIService"; 
+import { createBMI, readBMIs, deleteBMI } from "../services/BMIService";
+import { auth } from "../firebase";
 
 const WEIGHT_MIN = 20;
 const WEIGHT_MAX = 200;
@@ -33,130 +34,81 @@ const BMI = () => {
   const [weight, setWeight] = useState("60");
   const [age, setAge] = useState("20");
   const [bmi, setBmi] = useState(null);
-  const [showResult, setShowResult] = useState(false);
-  const [history, setHistory] = useState([]); 
 
-  // Error states to show inline messages
-  const [weightError, setWeightError] = useState("");
-  const [ageError, setAgeError] = useState("");
+  const [history, setHistory] = useState([]);
 
-  // sanitize and update weight (allow digits and one dot)
-  const handleWeightChange = (text) => {
-    // remove all characters except digits and dot
-    let cleaned = text.replace(/[^0-9.]/g, "");
-    const parts = cleaned.split(".");
-    if (parts.length > 2) {
-      cleaned = parts[0] + "." + parts.slice(1).join("");
-    }
-    setWeight(cleaned);
-    if (weightError) setWeightError("");
+  const user = auth.currentUser;
+  const isLoggedUser = user !== null;
+
+  // LOAD HISTORY WHEN LOGGED
+  useEffect(() => {
+    if (isLoggedUser) loadHistory();
+  }, [isLoggedUser]);
+
+  const loadHistory = async () => {
+    const records = await readBMIs();
+    setHistory(records);
   };
 
-  // sanitize and update age (only digits, integer)
+  // VALIDATIONS
+  const handleWeightChange = (text) => {
+    let cleaned = text.replace(/[^0-9.]/g, "");
+    const parts = cleaned.split(".");
+    if (parts.length > 2) cleaned = parts[0] + "." + parts.slice(1).join("");
+    setWeight(cleaned);
+  };
+
   const handleAgeChange = (text) => {
     const cleaned = text.replace(/[^0-9]/g, "");
     setAge(cleaned);
-    if (ageError) setAgeError("");
   };
 
   const validateInputs = (w, a) => {
-    let valid = true;
-    setWeightError("");
-    setAgeError("");
-
     if (isNaN(w) || w < WEIGHT_MIN || w > WEIGHT_MAX) {
-      setWeightError(`Pesha duhet të jetë midis ${WEIGHT_MIN} kg dhe ${WEIGHT_MAX} kg.`);
-      valid = false;
+      Alert.alert("Error", `Weight must be between ${WEIGHT_MIN} and ${WEIGHT_MAX}`);
+      return false;
     }
-    // ensure age is integer and within range
-    if (isNaN(a) || a < AGE_MIN || a > AGE_MAX || !Number.isInteger(a)) {
-      setAgeError(`Mosha duhet të jetë një numër i plotë midis ${AGE_MIN} dhe ${AGE_MAX} vjeç.`);
-      valid = false;
+    if (isNaN(a) || a < AGE_MIN || a > AGE_MAX) {
+      Alert.alert("Error", `Age must be between ${AGE_MIN} and ${AGE_MAX}`);
+      return false;
     }
-
-    return valid;
+    return true;
   };
 
+  // CALCULATE BMI
   const handleCalculate = async () => {
     const w = parseFloat(weight);
     const h = parseFloat(height);
-    const a = parseInt(age, 10); 
+    const a = parseInt(age, 10);
 
-    if (isNaN(h) || h <= 0) {
-      Alert.alert("Invalid Height", "Please select a valid height.");
-      return;
-    }
-
-    const isValid = validateInputs(w, a);
-
-    if (!isValid) {
-      let messages = [];
-      if (weightError) messages.push(`Pesha: ${weightError}`);
-      if (ageError) messages.push(`Mosha: ${ageError}`);
-      if (messages.length === 0) {
-        messages.push(
-          `Vlera e futur nuk është e shëndetshme. Pesha: ${WEIGHT_MIN}-${WEIGHT_MAX} kg. Mosha: ${AGE_MIN}-${AGE_MAX} vjeç.`
-        );
-      }
-      Alert.alert("Vlerë jo e mundur", messages.join("\n"));
-      return;
-    }
+    if (!validateInputs(w, a)) return;
 
     const bmiValue = w / ((h / 100) ** 2);
     const bmiRounded = parseFloat(bmiValue.toFixed(1));
     setBmi(bmiRounded);
 
-    try {
-      await createBMI({
-        gender,
-        height: h,
-        weight: w,
-        age: a,
-        bmi: bmiRounded,
-        date: new Date().toISOString(),
-      });
+    // GUEST USER → SHOW RESULT ONLY
+    if (!isLoggedUser) return;
 
-      // Fetch updated history
-      const updatedHistory = await readBMIs();
-      setHistory(updatedHistory.sort((a, b) => new Date(b.date) - new Date(a.date))); 
-    } catch (error) {
-      console.error("Error saving BMI:", error);
-    }
+    // LOGGED USER → SAVE BMI
+    await createBMI({
+      gender,
+      height: h,
+      weight: w,
+      age: a,
+      bmi: bmiRounded,
+      date: new Date().toISOString(),
+    });
 
-    setShowResult(true);
+    await loadHistory();
   };
 
-  const handleRecalculate = () => {
-    setShowResult(false);
-  };
-
+  // DELETE ROW
   const handleDelete = async (id) => {
-    try {
-      await deleteBMI(id);
-      const updatedHistory = await readBMIs();
-      setHistory(updatedHistory.sort((a, b) => new Date(b.date) - new Date(a.date)));
-      Alert.alert("Success", "Rekordi u fshi me sukses."); 
-    } catch (error) {
-      console.error("Error deleting BMI:", error);
-      Alert.alert("Gabim", "Nuk mund të fshihet rekordi. Kontrollo lidhjen ose rregullat e Firebase."); 
-    }
+    await deleteBMI(id);
+    await loadHistory();
   };
 
-  // If we have a result, show BmiResult component
-  if (showResult && bmi !== null) {
-    return (
-      <BmiResult
-        bmi={bmi}
-        onRecalculate={handleRecalculate}
-        history={history}
-        onDelete={handleDelete}
-        colors={colors}
-        isDarkMode={isDarkMode}
-      />
-    );
-  }
-
-  // Normal calculator
   return (
     <SafeAreaView
       style={[
@@ -167,129 +119,127 @@ const BMI = () => {
         },
       ]}
     >
-      <StatusBar
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={colors.background}
-        translucent={false}
-      />
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 140 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[styles.title, { color: colors.text }]}>BMI Calculator</Text>
 
-      <View style={{ flex: 1, marginTop: 45 }}>
-        <ScrollView
-          contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={[styles.title, { color: colors.text }]}>BMI Calculator</Text>
+        {/* Gender */}
+        <View style={styles.genderContainer}>
+          <TouchableOpacity
+            style={[
+              styles.genderBox,
+              { backgroundColor: colors.card },
+              gender === "male" && [styles.activeGender, { borderColor: colors.primary }],
+            ]}
+            onPress={() => setGender("male")}
+          >
+            <Text style={[styles.genderText, { color: colors.text }]}>♂ Male</Text>
+          </TouchableOpacity>
 
-          {/* Gender Selection */}
-          <View style={styles.genderContainer}>
-            <TouchableOpacity
-              style={[
-                styles.genderBox,
-                { backgroundColor: colors.card },
-                gender === "male" && [styles.activeGender, { borderColor: colors.primary }],
-              ]}
-              onPress={() => setGender("male")}
-            >
-              <Text style={[styles.genderText, { color: colors.text }]}>♂ Male</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.genderBox,
-                { backgroundColor: colors.card },
-                gender === "female" && [styles.activeGender, { borderColor: colors.primary }],
-              ]}
-              onPress={() => setGender("female")}
-            >
-              <Text style={[styles.genderText, { color: colors.text }]}>♀ Female</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[
+              styles.genderBox,
+              { backgroundColor: colors.card },
+              gender === "female" && [styles.activeGender, { borderColor: colors.primary }],
+            ]}
+            onPress={() => setGender("female")}
+          >
+            <Text style={[styles.genderText, { color: colors.text }]}>♀ Female</Text>
+          </TouchableOpacity>
+        </View>
 
-          {/* Height Slider */}
-          <View style={[styles.sliderBox, { backgroundColor: colors.card }]}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>HEIGHT</Text>
-            <Text style={[styles.value, { color: colors.text }]}>{height} cm</Text>
-            <Slider
-              style={{ width: "100%" }}
-              minimumValue={100}
-              maximumValue={220}
-              value={height}
-              onValueChange={(value) => setHeight(Math.round(value))}
-              minimumTrackTintColor={colors.primary}
-              thumbTintColor={colors.primary}
+        {/* Height */}
+        <View style={[styles.sliderBox, { backgroundColor: colors.card }]}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>HEIGHT</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{height} cm</Text>
+          <Slider
+            style={{ width: "100%" }}
+            minimumValue={100}
+            maximumValue={220}
+            value={height}
+            onValueChange={(value) => setHeight(Math.round(value))}
+            minimumTrackTintColor={colors.primary}
+            thumbTintColor={colors.primary}
+          />
+        </View>
+
+        {/* Weight & Age */}
+        <View style={styles.rowBox}>
+          <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>WEIGHT (kg)</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.primary }]}
+              keyboardType="numeric"
+              value={weight}
+              onChangeText={handleWeightChange}
             />
           </View>
 
-          {/* Weight & Age Inputs */}
-          <View style={styles.rowBox}>
-            <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>WEIGHT (kg)</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  { color: colors.text, borderColor: colors.primary },
-                ]}
-                keyboardType="numeric"
-                value={weight}
-                onChangeText={handleWeightChange}
-                placeholder={`${WEIGHT_MIN} - ${WEIGHT_MAX}`}
-              />
-              {weightError ? (
-                <Text style={styles.errorText}>{weightError}</Text>
-              ) : null}
-            </View>
-
-            <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>AGE</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  { color: colors.text, borderColor: colors.primary },
-                ]}
-                keyboardType="numeric"
-                value={age}
-                onChangeText={handleAgeChange}
-                placeholder={`${AGE_MIN} - ${AGE_MAX}`}
-                maxLength={3}
-              />
-              {ageError ? <Text style={styles.errorText}>{ageError}</Text> : null}
-            </View>
+          <View style={[styles.smallBox, { backgroundColor: colors.card }]}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>AGE</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.primary }]}
+              keyboardType="numeric"
+              value={age}
+              onChangeText={handleAgeChange}
+              maxLength={3}
+            />
           </View>
-
-          {/* Calculate Button */}
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: colors.primary }]}
-            onPress={handleCalculate}
-          >
-            <Text style={styles.buttonText}>Calculate BMI</Text>
-          </TouchableOpacity>
-        </ScrollView>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <List onNavigate={(p) => router.push(p)} />
         </View>
-      </View>
+
+        {/* Calculate Button */}
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.primary }]}
+          onPress={handleCalculate}
+        >
+          <Text style={styles.buttonText}>Calculate BMI</Text>
+        </TouchableOpacity>
+
+        {/* GUEST → show only result */}
+        {!isLoggedUser && bmi !== null && (
+          <View style={{ marginTop: 30 }}>
+            <BmiResult
+              bmi={bmi}
+              history={[]}
+              onDelete={() => {}}
+              onRecalculate={() => setBmi(null)}
+              colors={colors}
+              isDarkMode={isDarkMode}
+              isLoggedUser={false}
+            />
+          </View>
+        )}
+
+        {/* LOGGED USER ALWAYS SEES TABLE */}
+        {isLoggedUser && (
+          <View style={{ marginTop: 30 }}>
+            <BmiResult
+              bmi={bmi} // ignored in logged mode
+              history={history}
+              onDelete={handleDelete}
+              onRecalculate={() => setBmi(null)}
+              colors={colors}
+              isDarkMode={isDarkMode}
+              isLoggedUser={true}
+            />
+          </View>
+        )}
+      </ScrollView>
+
+     <View style={styles.footer}>
+  <List onNavigate={(p) => router.push(p)} />
+</View>
+
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scroll: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  genderContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
+  container: { flex: 1 },
+  title: { fontSize: 26, fontWeight: "bold", marginBottom: 20 },
+  genderContainer: { flexDirection: "row", justifyContent: "space-between", width: "100%" },
   genderBox: {
     flex: 1,
     margin: 5,
@@ -297,12 +247,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  activeGender: {
-    borderWidth: 2,
-  },
-  genderText: {
-    fontSize: 18,
-  },
+  activeGender: { borderWidth: 2 },
+  genderText: { fontSize: 18 },
+
   sliderBox: {
     width: "100%",
     borderRadius: 10,
@@ -310,18 +257,10 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
   },
-  label: {
-    fontSize: 14,
-  },
-  value: {
-    fontSize: 24,
-    marginVertical: 10,
-  },
-  rowBox: {
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
-  },
+  label: { fontSize: 14 },
+  value: { fontSize: 24, marginVertical: 10 },
+
+  rowBox: { flexDirection: "row", width: "100%", justifyContent: "space-between" },
   smallBox: {
     flex: 1,
     margin: 5,
@@ -338,11 +277,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     marginTop: 10,
   },
-  errorText: {
-    color: "red",
-    marginTop: 8,
-    textAlign: "center",
-  },
+
   button: {
     padding: 15,
     borderRadius: 10,
@@ -356,9 +291,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   footer: {
-    flexShrink: 0,
-    backgroundColor: "transparent",
-  },
+  flexShrink: 0,
+  backgroundColor: "transparent",
+}
+
 });
 
 export default BMI;
