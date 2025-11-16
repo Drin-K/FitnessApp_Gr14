@@ -75,95 +75,35 @@ export const saveNutritionGoal = async (userId, goalData) => {
   }
 };
 
-export const getNutritionGoals = async (userId) => {
+// Në services/nutritionsService.js - kontrollo këto funksione:
+export const updateNutritionGoal = async (userId, goalId, data) => {
   try {
-    const ref = collection(db, "users", userId, "nutritionGoals").withConverter(nutritionGoalConverter);
-    const snapshot = await getDocs(ref);
-
-    const goals = snapshot.docs.map(docSnap => {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        ...data,
-        // Sigurohu që mealLevels ekziston
-        mealLevels: data.mealLevels || {
-          Breakfast: 'Beginner',
-          Lunch: 'Beginner',
-          Dinner: 'Beginner',
-          Snacks: 'Beginner',
-        }
-      };
+    const goalRef = doc(db, "users", userId, "nutritionGoals", goalId);
+    await updateDoc(goalRef, {
+      ...data,
+      lastUpdated: new Date() // Shto këtë field
     });
-
-    goals.sort((a, b) => {
-      if ((a.isActive || false) === (b.isActive || false)) {
-        const aTime = a.createdAtReadable ? new Date(a.createdAtReadable).getTime() : 0;
-        const bTime = b.createdAtReadable ? new Date(b.createdAtReadable).getTime() : 0;
-        return bTime - aTime;
-      }
-      return a.isActive ? -1 : 1;
-    });
-
-    return goals;
+    console.log("✅ Goal updated in Firebase:", goalId);
+    return true;
   } catch (error) {
-    console.error("Error fetching nutrition goals:", error);
-    return [];
+    console.error("❌ Error updating goal:", error);
+    throw error;
   }
 };
 
-export const updateNutritionGoal = async (userId, goalId, newData) => {
+export const getNutritionGoals = async (userId) => {
   try {
-    const isActive = typeof newData.isActive === "boolean" ? newData.isActive : false;
-    const oldId = goalId;
-    
-    // Përdor ID ekzistues, mos e ndrysho kur përditëson
-    const newId = oldId;
-
-    if (isActive) {
-      // Deactivate other goals
-      const goalsRef = collection(db, "users", userId, "nutritionGoals").withConverter(nutritionGoalConverter);
-      const snapshot = await getDocs(goalsRef);
-      if (!snapshot.empty) {
-        const batch = writeBatch(db);
-        snapshot.docs.forEach(docSnap => {
-          if (docSnap.id !== oldId) {
-            const ref = doc(db, "users", userId, "nutritionGoals", docSnap.id);
-            batch.set(ref, { isActive: false }, { merge: true });
-          }
-        });
-        await batch.commit();
-      }
-    }
-
-    // Përditëso dokumentin ekzistues
-    const updateData = {
-      name: newData.name,
-      calories: newData.calories,
-      isActive: isActive,
-      Breakfast: newData.Breakfast || "",
-      Lunch: newData.Lunch || "",
-      Dinner: newData.Dinner || "",
-      Snacks: newData.Snacks || "",
-      mealLevels: newData.mealLevels || { // Shto këtë
-        Breakfast: 'Beginner',
-        Lunch: 'Beginner',
-        Dinner: 'Beginner',
-        Snacks: 'Beginner',
-      },
-      tips: newData.tips || [], // Shto këtë
-      updatedAt: new Date(), // Shto updatedAt
-    };
-
-    if (newData.img !== undefined) updateData.img = newData.img;
-    if (newData.originalName !== undefined) updateData.originalName = newData.originalName;
-
-    const goalRef = doc(db, "users", userId, "nutritionGoals", oldId);
-    await updateDoc(goalRef, updateData);
-    
-    return { id: oldId, ...updateData };
+    const goalsRef = collection(db, "users", userId, "nutritionGoals");
+    const snapshot = await getDocs(goalsRef);
+    const goals = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    console.log("✅ Goals retrieved from Firebase:", goals.length);
+    return goals;
   } catch (error) {
-    console.error("Error updating nutrition goal:", error);
-    throw error;
+    console.error("❌ Error getting goals:", error);
+    return [];
   }
 };
 

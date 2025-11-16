@@ -79,6 +79,90 @@ const mealOptions = {
   ]
 };
 
+// Funksion për të llogaritur kaloritë totale nga emrat e ushqimeve
+const calculateTotalCalories = (breakfast, lunch, dinner, snacks) => {
+  let total = 0;
+  
+  // Gjej kaloritë për breakfast
+  const breakfastMeal = mealOptions.Breakfast.find(meal => meal.name === breakfast);
+  if (breakfastMeal) total += breakfastMeal.calories;
+  
+  // Gjej kaloritë për lunch
+  const lunchMeal = mealOptions.Lunch.find(meal => meal.name === lunch);
+  if (lunchMeal) total += lunchMeal.calories;
+  
+  // Gjej kaloritë për dinner
+  const dinnerMeal = mealOptions.Dinner.find(meal => meal.name === dinner);
+  if (dinnerMeal) total += dinnerMeal.calories;
+  
+  // Gjej kaloritë për snacks
+  const snacksMeal = mealOptions.Snacks.find(meal => meal.name === snacks);
+  if (snacksMeal) total += snacksMeal.calories;
+  
+  return total;
+};
+
+// Funksion për të gjetur kaloritë për një ushqim specifik
+const findMealCalories = (mealName, mealType) => {
+  const meals = mealOptions[mealType];
+  const meal = meals.find(m => m.name === mealName);
+  return meal ? meal.calories : 0;
+};
+
+// Funksion për të konvertuar ushqimet default nga format i vjetër në të ri
+const convertDefaultMealsToNewFormat = (planData) => {
+  if (!planData) return null;
+
+  const convertedPlan = {};
+  
+  Object.keys(planData).forEach(level => {
+    const levelData = planData[level];
+    convertedPlan[level] = {};
+    
+    // Konverto çdo ushqim duke gjetur përputhjen më të mirë në mealOptions
+    Object.keys(levelData).forEach(mealType => {
+      if (['Breakfast', 'Lunch', 'Dinner', 'Snacks'].includes(mealType)) {
+        const oldMeal = levelData[mealType];
+        
+        // Gjej ushqimin më të ngjashëm në mealOptions
+        const matchedMeal = findBestMatchingMeal(oldMeal, mealType);
+        convertedPlan[level][mealType] = matchedMeal;
+      } else {
+        // Mbaj tips dhe të dhëna të tjera
+        convertedPlan[level][mealType] = levelData[mealType];
+      }
+    });
+  });
+  
+  return convertedPlan;
+};
+
+// Funksion për të gjetur ushqimin më të ngjashëm në mealOptions
+const findBestMatchingMeal = (oldMeal, mealType) => {
+  const availableMeals = mealOptions[mealType];
+  
+  // Nëse ushqimi ekziston saktësisht në listë, ktheje atë
+  const exactMatch = availableMeals.find(meal => meal.name === oldMeal);
+  if (exactMatch) return exactMatch.name;
+  
+  // Nëse jo, gjej ushqimin më të ngjashëm bazuar në keyword-et
+  const keywords = oldMeal.toLowerCase().split(' ');
+  let bestMatch = availableMeals[0]; // Default to first option
+  
+  availableMeals.forEach(meal => {
+    const mealKeywords = meal.name.toLowerCase().split(' ');
+    const commonKeywords = keywords.filter(keyword => 
+      mealKeywords.some(mealKeyword => mealKeyword.includes(keyword) || keyword.includes(mealKeyword))
+    );
+    
+    if (commonKeywords.length > 0) {
+      bestMatch = meal;
+    }
+  });
+  
+  return bestMatch.name;
+};
+
 const Nutrition = () => {
   const router = useRouter();
   const { colors, isDarkMode } = useTheme();
@@ -119,36 +203,6 @@ const Nutrition = () => {
     { img: { uri: "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" }, name: "Avocado", desc: "Healthy fats for energy." },
   ];
 
-  // Funksion për të llogaritur kaloritë totale
-  const calculateTotalCalories = (breakfast, lunch, dinner, snacks) => {
-    let total = 0;
-    
-    // Gjej kaloritë për breakfast
-    const breakfastMeal = mealOptions.Breakfast.find(meal => meal.name === breakfast);
-    if (breakfastMeal) total += breakfastMeal.calories;
-    
-    // Gjej kaloritë për lunch
-    const lunchMeal = mealOptions.Lunch.find(meal => meal.name === lunch);
-    if (lunchMeal) total += lunchMeal.calories;
-    
-    // Gjej kaloritë për dinner
-    const dinnerMeal = mealOptions.Dinner.find(meal => meal.name === dinner);
-    if (dinnerMeal) total += dinnerMeal.calories;
-    
-    // Gjej kaloritë për snacks
-    const snacksMeal = mealOptions.Snacks.find(meal => meal.name === snacks);
-    if (snacksMeal) total += snacksMeal.calories;
-    
-    return total;
-  };
-
-  // Funksion për të gjetur kaloritë për një ushqim specifik
-  const findMealCalories = (mealName, mealType) => {
-    const meals = mealOptions[mealType];
-    const meal = meals.find(m => m.name === mealName);
-    return meal ? meal.calories : 0;
-  };
-
   // Funksion për të marrë të dhënat e niveleve bazuar në route
   const getPlanLevels = (goal) => {
     const routeToDataMap = {
@@ -159,67 +213,99 @@ const Nutrition = () => {
 
     const planData = routeToDataMap[goal.route];
     
-    // Nëse nuk ka të dhëna, kthe të dhëna default
-    if (!planData) {
+    // Konverto planat default në formatin e ri me kalori
+    const convertedPlanData = convertDefaultMealsToNewFormat(planData);
+    
+    // Nëse nuk ka të dhëna, kthe të dhëna default nga mealOptions
+    if (!convertedPlanData) {
       return {
         Beginner: {
           Breakfast: mealOptions.Breakfast[0].name,
           Lunch: mealOptions.Lunch[0].name,
           Dinner: mealOptions.Dinner[0].name,
-          Snacks: mealOptions.Snacks[0].name
+          Snacks: mealOptions.Snacks[0].name,
+          tips: ["Start with balanced meals", "Stay consistent", "Drink plenty of water"]
         },
         Intermediate: {
           Breakfast: mealOptions.Breakfast[1].name,
           Lunch: mealOptions.Lunch[1].name,
           Dinner: mealOptions.Dinner[1].name,
-          Snacks: mealOptions.Snacks[1].name
+          Snacks: mealOptions.Snacks[1].name,
+          tips: ["Increase protein intake", "Track your progress", "Include variety"]
         },
         Advanced: {
           Breakfast: mealOptions.Breakfast[2].name,
           Lunch: mealOptions.Lunch[2].name,
           Dinner: mealOptions.Dinner[2].name,
-          Snacks: mealOptions.Snacks[2].name
+          Snacks: mealOptions.Snacks[2].name,
+          tips: ["Optimize meal timing", "Focus on recovery", "Monitor macros"]
         }
       };
     }
 
-    return planData;
+    return convertedPlanData;
   };
 
-  const fetchUserSavedGoals = async (userId) => {
-    if (!userId) return;
-    setFetchingGoals(true);
-    try {
-      const goals = await getNutritionGoals(userId) || [];
-      console.log("📥 Goals fetched from Firebase:", goals.length);
-      
-      // Normalize dhe verifiko të dhënat
-      const normalized = goals.map(g => ({
-        ...g,
-        id: g.id || generateIdFromName(g.originalName || g.name || "saved_goal"),
-        originalName: g.originalName || g.name,
-        // Sigurohu që të gjitha fushat ekzistojnë
-        Breakfast: g.Breakfast || mealOptions.Breakfast[0].name,
-        Lunch: g.Lunch || mealOptions.Lunch[0].name,
-        Dinner: g.Dinner || mealOptions.Dinner[0].name,
-        Snacks: g.Snacks || mealOptions.Snacks[0].name,
-        mealLevels: g.mealLevels || {
-          Breakfast: 'Beginner',
-          Lunch: 'Beginner',
-          Dinner: 'Beginner',
-          Snacks: 'Beginner',
-        }
-      }));
-      
-      console.log("🔄 Normalized goals:", normalized);
-      setSavedGoals(normalized);
-    } catch (error) {
-      console.error("❌ fetchUserSavedGoals error:", error);
-      Alert.alert("Error", "Could not load your saved plans.");
-    } finally {
-      setFetchingGoals(false);
-    }
+  // Funksion për të marrë kaloritë totale për një plan default
+  const getDefaultPlanCalories = (goal) => {
+    const planLevels = getPlanLevels(goal);
+    const defaultPlan = planLevels.Beginner;
+    
+    const totalCalories = calculateTotalCalories(
+      defaultPlan.Breakfast,
+      defaultPlan.Lunch,
+      defaultPlan.Dinner,
+      defaultPlan.Snacks
+    );
+    
+    return `${totalCalories} kcal/day`;
   };
+
+const fetchUserSavedGoals = async (userId) => {
+  if (!userId) return;
+  setFetchingGoals(true);
+  try {
+    const goals = await getNutritionGoals(userId) || [];
+    console.log("📥 Goals fetched from Firebase:", goals.length);
+    
+    // Shfaq të dhënat aktuale nga Firebase
+    goals.forEach((goal, index) => {
+      console.log(`🔥 Firebase Goal ${index + 1}:`, {
+        name: goal.name,
+        Breakfast: goal.Breakfast,
+        Lunch: goal.Lunch,
+        Dinner: goal.Dinner,
+        Snacks: goal.Snacks
+      });
+    });
+    
+    // Normalize dhe verifiko të dhënat
+    const normalized = goals.map(g => ({
+      ...g,
+      id: g.id || generateIdFromName(g.originalName || g.name || "saved_goal"),
+      originalName: g.originalName || g.name,
+      // Sigurohu që të gjitha fushat ekzistojnë
+      Breakfast: g.Breakfast || mealOptions.Breakfast[0].name,
+      Lunch: g.Lunch || mealOptions.Lunch[0].name,
+      Dinner: g.Dinner || mealOptions.Dinner[0].name,
+      Snacks: g.Snacks || mealOptions.Snacks[0].name,
+      mealLevels: g.mealLevels || {
+        Breakfast: 'Beginner',
+        Lunch: 'Beginner',
+        Dinner: 'Beginner',
+        Snacks: 'Beginner',
+      }
+    }));
+    
+    console.log("🔄 Normalized goals:", normalized);
+    setSavedGoals(normalized);
+  } catch (error) {
+    console.error("❌ fetchUserSavedGoals error:", error);
+    Alert.alert("Error", "Could not load your saved plans.");
+  } finally {
+    setFetchingGoals(false);
+  }
+};
 
   // Build the display list: saved goals first, then defaults not yet saved
   const getDisplayGoals = () => {
@@ -227,16 +313,27 @@ const Nutrition = () => {
       ...goal,
       originalName: goal.name,
       id: generateIdFromName(goal.name),
+      // Përditëso kaloritë për planat default duke përdorur sistemin e ri të kalorive
+      calories: getDefaultPlanCalories(goal)
     }));
 
     if (savedGoals.length > 0) {
       // Map saved goals into display items (preserve saved data like meals)
       const displaySaved = savedGoals.map(savedGoal => {
         const defaultGoal = normalizedDefaults.find(d => d.name === savedGoal.originalName);
+        
+        // Llogarit kaloritë totale për planin e ruajtur
+        const savedGoalCalories = calculateTotalCalories(
+          savedGoal.Breakfast,
+          savedGoal.Lunch,
+          savedGoal.Dinner,
+          savedGoal.Snacks
+        );
+        
         return {
           id: savedGoal.id,
           name: savedGoal.name || defaultGoal?.name || savedGoal.originalName,
-          calories: savedGoal.calories || defaultGoal?.calories || "",
+          calories: `${savedGoalCalories} kcal/day`,
           img: savedGoal.img || defaultGoal?.img || normalizedDefaults[0].img,
           route: defaultGoal?.route || "/nutrition",
           originalName: savedGoal.originalName,
@@ -295,9 +392,17 @@ const Nutrition = () => {
         const planLevels = getPlanLevels(goal);
         const defaultPlan = planLevels.Beginner;
 
+        // Llogarit kaloritë totale për planin e ri
+        const totalCalories = calculateTotalCalories(
+          defaultPlan.Breakfast,
+          defaultPlan.Lunch,
+          defaultPlan.Dinner,
+          defaultPlan.Snacks
+        );
+
         const payload = {
           name: goal.name,
-          calories: goal.calories,
+          calories: `${totalCalories} kcal/day`,
           img: goal.img,
           originalName: goalOriginalName,
           isActive: true,
@@ -316,7 +421,7 @@ const Nutrition = () => {
 
         await saveNutritionGoal(user.uid, payload);
         await fetchUserSavedGoals(user.uid);
-        Alert.alert("Saved!", `${payload.name} has been saved`);
+        Alert.alert("Saved!", `${payload.name} has been saved with ${totalCalories} kcal/day`);
       }
     } catch (error) {
       console.error("handleGoalToggle error:", error);
@@ -340,9 +445,17 @@ const Nutrition = () => {
                 const planLevels = getPlanLevels(goal);
                 const defaultPlan = planLevels.Beginner;
 
+                // Llogarit kaloritë totale për planin e ri
+                const totalCalories = calculateTotalCalories(
+                  defaultPlan.Breakfast,
+                  defaultPlan.Lunch,
+                  defaultPlan.Dinner,
+                  defaultPlan.Snacks
+                );
+
                 const payload = {
                   name: goal.name,
-                  calories: goal.calories,
+                  calories: `${totalCalories} kcal/day`,
                   img: goal.img,
                   originalName: goal.originalName,
                   isActive: true,
@@ -419,103 +532,95 @@ const Nutrition = () => {
     setEditModalVisible(true);
   };
 
-  const handleSaveEdit = async () => {
-    if (!editGoal) {
-      Alert.alert("Error", "Nothing to save.");
-      return;
-    }
+const handleSaveEdit = async () => {
+  if (!editGoal) {
+    Alert.alert("Error", "Nothing to save.");
+    return;
+  }
 
-    // Verifikoj nëse të gjitha fushat e nevojshme janë plotësuar
-    const requiredFields = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
-    const emptyFields = requiredFields.filter(field => !editGoal[field]?.trim());
-    
-    if (emptyFields.length > 0) {
-      Alert.alert(
-        "Missing Information", 
-        `Please select meals for: ${emptyFields.join(', ')}`
-      );
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const updatedData = {
-        name: editGoal.name,
-        calories: `${totalCalories} kcal/day`,
-        img: editGoal.img,
-        originalName: editGoal.originalName,
-        Breakfast: editGoal.Breakfast,
-        Lunch: editGoal.Lunch,
-        Dinner: editGoal.Dinner,
-        Snacks: editGoal.Snacks,
-        mealLevels: editGoal.mealLevels || {
-          Breakfast: 'Beginner',
-          Lunch: 'Beginner', 
-          Dinner: 'Beginner',
-          Snacks: 'Beginner',
-        },
-        isActive: true,
-        updatedAt: new Date()
-      };
-
-      console.log("🔄 Saving data to Firebase:", updatedData);
-      console.log("📝 Goal ID:", editGoal.id);
-
-      if (editGoal.id && savedGoals.some(s => s.id === editGoal.id)) {
-        console.log("📝 Updating existing goal:", editGoal.id);
-        await updateNutritionGoal(user.uid, editGoal.id, updatedData);
-      } else {
-        console.log("💾 Saving new goal");
-        await saveNutritionGoal(user.uid, updatedData);
-      }
-
-      // Rifresko të dhënat menjëherë
-      await fetchUserSavedGoals(user.uid);
-      
-      // Mbyll modal dhe reset
-      setEditModalVisible(false);
-      setEditGoal(null);
-      setSelectedMealType(null);
-      setTotalCalories(0);
-      
-      Alert.alert("Success", `"${updatedData.name}" has been updated successfully!\nTotal Calories: ${totalCalories} kcal`);
-      
-    } catch (error) {
-      console.error("❌ Edit error:", error);
-      Alert.alert("Error", "Could not update plan. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Funksion për të ndryshuar ushqimin për një vakt specifik
-  const handleMealChange = (mealType, meal) => {
-    if (!editGoal) {
-      console.log("No editGoal available");
-      return;
-    }
-
-    console.log(`Changing ${mealType} to:`, meal.name);
-    
-    const updatedGoal = {
-      ...editGoal,
-      [mealType]: meal.name
+  setSaving(true);
+  try {
+    // Krijo objektin e të dhënave pa vlera undefined
+    const updatedData = {
+      name: editGoal.name || "",
+      calories: `${totalCalories} kcal/day`,
+      originalName: editGoal.originalName || editGoal.name || "",
+      Breakfast: editGoal.Breakfast || mealOptions.Breakfast[0].name,
+      Lunch: editGoal.Lunch || mealOptions.Lunch[0].name,
+      Dinner: editGoal.Dinner || mealOptions.Dinner[0].name,
+      Snacks: editGoal.Snacks || mealOptions.Snacks[0].name,
+      mealLevels: editGoal.mealLevels || {
+        Breakfast: 'Beginner',
+        Lunch: 'Beginner', 
+        Dinner: 'Beginner',
+        Snacks: 'Beginner',
+      },
+      isActive: true,
+      updatedAt: new Date()
     };
 
-    // Llogarit kaloritë e reja totale
-    const newTotalCalories = calculateTotalCalories(
-      updatedGoal.Breakfast,
-      updatedGoal.Lunch,
-      updatedGoal.Dinner,
-      updatedGoal.Snacks
-    );
+    // Shto img vetëm nëse ekziston dhe nuk është undefined
+    if (editGoal.img) {
+      updatedData.img = editGoal.img;
+    }
 
-    setEditGoal(updatedGoal);
-    setTotalCalories(newTotalCalories);
+    console.log("🔄 Saving data to Firebase:", updatedData);
 
-    // Mbyll modalën e zgjedhjes pasi të zgjidhet një ushqim
+    if (editGoal.id && savedGoals.some(s => s.id === editGoal.id)) {
+      console.log("📝 Updating existing goal:", editGoal.id);
+      await updateNutritionGoal(user.uid, editGoal.id, updatedData);
+    } else {
+      console.log("💾 Saving new goal");
+      await saveNutritionGoal(user.uid, updatedData);
+    }
+
+    // Rifresko të dhënat
+    await fetchUserSavedGoals(user.uid);
+    
+    // Mbyll modal dhe reset
+    setEditModalVisible(false);
+    setEditGoal(null);
     setSelectedMealType(null);
+    setTotalCalories(0);
+    
+    Alert.alert("Success", `"${updatedData.name}" has been updated successfully!\nTotal Calories: ${totalCalories} kcal`);
+    
+  } catch (error) {
+    console.error("❌ Edit error:", error);
+    Alert.alert("Error", "Could not update plan. Please try again.");
+  } finally {
+    setSaving(false);
+  }
+};
+
+  // Funksion për të ndryshuar ushqimin për një vakt specifik
+ const handleMealChange = (mealType, meal) => {
+  if (!editGoal) {
+    console.log("❌ No editGoal available");
+    return;
+  }
+
+  console.log(`🔄 Changing ${mealType} from:`, editGoal[mealType]);
+  console.log(`🔄 Changing ${mealType} to:`, meal.name);
+  
+  const updatedGoal = {
+    ...editGoal,
+    [mealType]: meal.name
   };
+
+  console.log("✅ Updated goal state:", updatedGoal);
+
+  const newTotalCalories = calculateTotalCalories(
+    updatedGoal.Breakfast,
+    updatedGoal.Lunch,
+    updatedGoal.Dinner,
+    updatedGoal.Snacks
+  );
+
+  setEditGoal(updatedGoal);
+  setTotalCalories(newTotalCalories);
+  setSelectedMealType(null);
+};
 
   // Funksion për të hapur modalën e zgjedhjes së ushqimit
   const openMealSelection = (mealType) => {
@@ -585,7 +690,13 @@ const Nutrition = () => {
                 <Text style={[styles.sectionTitle, { color: colors.primary }]}>Select Your Goal</Text>
                 <View style={styles.cardRow}>
                   {dietGoals.map((goal, i) => (
-                    <NutritionItem key={i} img={goal.img} name={goal.name} onPress={() => router.push(goal.route)} />
+                    <NutritionItem 
+                      key={i} 
+                      img={goal.img} 
+                      name={goal.name} 
+                      desc={getDefaultPlanCalories(goal)}
+                      onPress={() => router.push(goal.route)} 
+                    />
                   ))}
                 </View>
               </View>
@@ -835,8 +946,7 @@ const Nutrition = () => {
   );
 };
 
-export default Nutrition;
-
+// Stilet mbeten të njëjta si në kodin e mëparshëm
 const styles = StyleSheet.create({
   container: { flex: 1 },
   bg: { flex: 1 },
@@ -950,12 +1060,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
-  selectedMealContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
+selectedMealContainer: {
+  padding: 12,
+  borderRadius: 8,
+  marginBottom: 10,
+  borderWidth: 2, // Ndrysho në 2 për ta bërë më të dukshme
+  borderColor: '#4CAF50', // Ngjyrë e gjelbër për të treguar se është aktiv
+  backgroundColor: '#f9f9f9',
+  minHeight: 50, // Lartësi minimale
+  justifyContent: 'center', 
   },
   selectedMealText: {
     fontSize: 14,
@@ -1029,3 +1142,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
+
+export default Nutrition;
