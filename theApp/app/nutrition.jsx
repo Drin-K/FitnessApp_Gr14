@@ -39,6 +39,46 @@ const generateIdFromName = (name = "") => {
   return name.toString().trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_\-]/g, "") || `goal_${Math.random().toString(36).slice(2, 9)}`;
 };
 
+// Database e ushqimeve me kalori për çdo vakt
+const mealOptions = {
+  Breakfast: [
+    { name: "Oatmeal with fruits and nuts + 2 boiled eggs", calories: 450 },
+    { name: "3 egg omelette with spinach + whole grain toast", calories: 380 },
+    { name: "Protein smoothie with banana and spinach", calories: 320 },
+    { name: "Greek yogurt with granola and berries", calories: 350 },
+    { name: "Scrambled eggs with avocado and whole wheat bread", calories: 420 },
+    { name: "Protein pancakes with maple syrup", calories: 480 },
+    { name: "Cottage cheese with pineapple and almonds", calories: 280 }
+  ],
+  Lunch: [
+    { name: "Grilled chicken salad with mixed vegetables", calories: 520 },
+    { name: "Turkey wrap with whole wheat tortilla", calories: 480 },
+    { name: "Quinoa bowl with grilled chicken and tahini", calories: 560 },
+    { name: "Salmon with sweet potato and steamed broccoli", calories: 580 },
+    { name: "Brown rice with vegetables and tofu", calories: 450 },
+    { name: "Chicken stir-fry with brown rice", calories: 520 },
+    { name: "Lentil soup with whole grain bread", calories: 380 }
+  ],
+  Dinner: [
+    { name: "Baked salmon with quinoa and broccoli", calories: 540 },
+    { name: "Grilled fish with sweet potato and greens", calories: 490 },
+    { name: "Lean steak with cauliflower rice and asparagus", calories: 520 },
+    { name: "Chicken breast with roasted vegetables", calories: 480 },
+    { name: "Turkey meatballs with zucchini noodles", calories: 440 },
+    { name: "Baked cod with mashed potatoes and peas", calories: 460 },
+    { name: "Vegetable curry with brown rice", calories: 420 }
+  ],
+  Snacks: [
+    { name: "Greek yogurt with almonds and apple", calories: 280 },
+    { name: "Protein shake with pear and carrots", calories: 220 },
+    { name: "Cottage cheese with berries and nuts", calories: 240 },
+    { name: "Apple slices with peanut butter", calories: 320 },
+    { name: "Protein bar and banana", calories: 350 },
+    { name: "Hummus with vegetable sticks", calories: 180 },
+    { name: "Mixed nuts and dried fruits", calories: 300 }
+  ]
+};
+
 const Nutrition = () => {
   const router = useRouter();
   const { colors, isDarkMode } = useTheme();
@@ -49,6 +89,8 @@ const Nutrition = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editGoal, setEditGoal] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState(null);
+  const [totalCalories, setTotalCalories] = useState(0);
 
   const dietGoals = [
     {
@@ -77,6 +119,36 @@ const Nutrition = () => {
     { img: { uri: "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" }, name: "Avocado", desc: "Healthy fats for energy." },
   ];
 
+  // Funksion për të llogaritur kaloritë totale
+  const calculateTotalCalories = (breakfast, lunch, dinner, snacks) => {
+    let total = 0;
+    
+    // Gjej kaloritë për breakfast
+    const breakfastMeal = mealOptions.Breakfast.find(meal => meal.name === breakfast);
+    if (breakfastMeal) total += breakfastMeal.calories;
+    
+    // Gjej kaloritë për lunch
+    const lunchMeal = mealOptions.Lunch.find(meal => meal.name === lunch);
+    if (lunchMeal) total += lunchMeal.calories;
+    
+    // Gjej kaloritë për dinner
+    const dinnerMeal = mealOptions.Dinner.find(meal => meal.name === dinner);
+    if (dinnerMeal) total += dinnerMeal.calories;
+    
+    // Gjej kaloritë për snacks
+    const snacksMeal = mealOptions.Snacks.find(meal => meal.name === snacks);
+    if (snacksMeal) total += snacksMeal.calories;
+    
+    return total;
+  };
+
+  // Funksion për të gjetur kaloritë për një ushqim specifik
+  const findMealCalories = (mealName, mealType) => {
+    const meals = mealOptions[mealType];
+    const meal = meals.find(m => m.name === mealName);
+    return meal ? meal.calories : 0;
+  };
+
   // Funksion për të marrë të dhënat e niveleve bazuar në route
   const getPlanLevels = (goal) => {
     const routeToDataMap = {
@@ -87,68 +159,31 @@ const Nutrition = () => {
 
     const planData = routeToDataMap[goal.route];
     
-    // DEBUG: Kontrollo se çfarë po merret
-    console.log("🔍 === DEBUG GET PLAN LEVELS ===");
-    console.log("Goal route:", goal.route);
-    console.log("Goal name:", goal.name);
-    console.log("Plan data exists:", !!planData);
-    
-    if (planData) {
-      console.log("Beginner exists:", !!planData.Beginner);
-      console.log("Beginner Breakfast:", planData.Beginner?.Breakfast);
-      console.log("Intermediate Breakfast:", planData.Intermediate?.Breakfast);
-      console.log("Advanced Breakfast:", planData.Advanced?.Breakfast);
-    } else {
-      console.log("❌ NO PLAN DATA FOUND for route:", goal.route);
-    }
-    console.log("=================================");
-
-    // Nëse nuk ka të dhëna, kthe të dhëna test
+    // Nëse nuk ka të dhëna, kthe të dhëna default
     if (!planData) {
-      console.log("⚠️ Using fallback data for:", goal.name);
       return {
         Beginner: {
-          Breakfast: "Oatmeal with fruits and nuts + 2 boiled eggs",
-          Lunch: "Grilled chicken salad with mixed vegetables",
-          Dinner: "Baked salmon with quinoa and broccoli",
-          Snacks: "Greek yogurt with almonds and apple"
+          Breakfast: mealOptions.Breakfast[0].name,
+          Lunch: mealOptions.Lunch[0].name,
+          Dinner: mealOptions.Dinner[0].name,
+          Snacks: mealOptions.Snacks[0].name
         },
         Intermediate: {
-          Breakfast: "3 egg omelette with spinach + whole grain toast",
-          Lunch: "Turkey wrap with whole wheat tortilla",
-          Dinner: "Grilled fish with sweet potato and greens",
-          Snacks: "Protein shake with pear and carrots"
+          Breakfast: mealOptions.Breakfast[1].name,
+          Lunch: mealOptions.Lunch[1].name,
+          Dinner: mealOptions.Dinner[1].name,
+          Snacks: mealOptions.Snacks[1].name
         },
         Advanced: {
-          Breakfast: "Protein smoothie with banana and spinach",
-          Lunch: "Quinoa bowl with grilled chicken and tahini",
-          Dinner: "Lean steak with cauliflower rice and asparagus",
-          Snacks: "Cottage cheese with berries and nuts"
+          Breakfast: mealOptions.Breakfast[2].name,
+          Lunch: mealOptions.Lunch[2].name,
+          Dinner: mealOptions.Dinner[2].name,
+          Snacks: mealOptions.Snacks[2].name
         }
       };
     }
 
-    // Kthe të dhënat e gjetura
-    return {
-      Beginner: planData.Beginner || {
-        Breakfast: "Breakfast: Oatmeal with eggs and tea",
-        Lunch: "Lunch: Chicken salad with dressing",
-        Dinner: "Dinner: Salmon with vegetables",
-        Snacks: "Snacks: Yogurt with fruits"
-      },
-      Intermediate: planData.Intermediate || {
-        Breakfast: "Breakfast: Egg omelette with toast",
-        Lunch: "Lunch: Turkey wrap with vegetables",
-        Dinner: "Dinner: Fish with sweet potato",
-        Snacks: "Snacks: Protein shake with snacks"
-      },
-      Advanced: planData.Advanced || {
-        Breakfast: "Breakfast: Protein smoothie",
-        Lunch: "Lunch: Quinoa bowl with chicken",
-        Dinner: "Dinner: Steak with cauliflower rice",
-        Snacks: "Snacks: Cottage cheese with nuts"
-      }
-    };
+    return planData;
   };
 
   const fetchUserSavedGoals = async (userId) => {
@@ -164,10 +199,10 @@ const Nutrition = () => {
         id: g.id || generateIdFromName(g.originalName || g.name || "saved_goal"),
         originalName: g.originalName || g.name,
         // Sigurohu që të gjitha fushat ekzistojnë
-        Breakfast: g.Breakfast || "",
-        Lunch: g.Lunch || "",
-        Dinner: g.Dinner || "", 
-        Snacks: g.Snacks || "",
+        Breakfast: g.Breakfast || mealOptions.Breakfast[0].name,
+        Lunch: g.Lunch || mealOptions.Lunch[0].name,
+        Dinner: g.Dinner || mealOptions.Dinner[0].name,
+        Snacks: g.Snacks || mealOptions.Snacks[0].name,
         mealLevels: g.mealLevels || {
           Breakfast: 'Beginner',
           Lunch: 'Beginner',
@@ -206,10 +241,10 @@ const Nutrition = () => {
           route: defaultGoal?.route || "/nutrition",
           originalName: savedGoal.originalName,
           isActive: savedGoal.isActive ?? true,
-          Breakfast: savedGoal.Breakfast || "",
-          Lunch: savedGoal.Lunch || "",
-          Dinner: savedGoal.Dinner || "",
-          Snacks: savedGoal.Snacks || "",
+          Breakfast: savedGoal.Breakfast || mealOptions.Breakfast[0].name,
+          Lunch: savedGoal.Lunch || mealOptions.Lunch[0].name,
+          Dinner: savedGoal.Dinner || mealOptions.Dinner[0].name,
+          Snacks: savedGoal.Snacks || mealOptions.Snacks[0].name,
           mealLevels: savedGoal.mealLevels || {
             Breakfast: savedGoal.mealLevels?.Breakfast || 'Beginner',
             Lunch: savedGoal.mealLevels?.Lunch || 'Beginner',
@@ -266,10 +301,10 @@ const Nutrition = () => {
           img: goal.img,
           originalName: goalOriginalName,
           isActive: true,
-          Breakfast: defaultPlan.Breakfast || "",
-          Lunch: defaultPlan.Lunch || "",
-          Dinner: defaultPlan.Dinner || "",
-          Snacks: defaultPlan.Snacks || "",
+          Breakfast: defaultPlan.Breakfast || mealOptions.Breakfast[0].name,
+          Lunch: defaultPlan.Lunch || mealOptions.Lunch[0].name,
+          Dinner: defaultPlan.Dinner || mealOptions.Dinner[0].name,
+          Snacks: defaultPlan.Snacks || mealOptions.Snacks[0].name,
           mealLevels: {
             Breakfast: 'Beginner',
             Lunch: 'Beginner',
@@ -311,10 +346,10 @@ const Nutrition = () => {
                   img: goal.img,
                   originalName: goal.originalName,
                   isActive: true,
-                  Breakfast: defaultPlan.Breakfast || "",
-                  Lunch: defaultPlan.Lunch || "",
-                  Dinner: defaultPlan.Dinner || "",
-                  Snacks: defaultPlan.Snacks || "",
+                  Breakfast: defaultPlan.Breakfast || mealOptions.Breakfast[0].name,
+                  Lunch: defaultPlan.Lunch || mealOptions.Lunch[0].name,
+                  Dinner: defaultPlan.Dinner || mealOptions.Dinner[0].name,
+                  Snacks: defaultPlan.Snacks || mealOptions.Snacks[0].name,
                   mealLevels: {
                     Breakfast: 'Beginner',
                     Lunch: 'Beginner',
@@ -331,11 +366,17 @@ const Nutrition = () => {
                 const newlySaved = updatedGoals.find(g => g.originalName === goal.originalName);
                 
                 if (newlySaved) {
-                  const planLevels = getPlanLevels(goal);
+                  const totalCal = calculateTotalCalories(
+                    newlySaved.Breakfast,
+                    newlySaved.Lunch,
+                    newlySaved.Dinner,
+                    newlySaved.Snacks
+                  );
                   setEditGoal({
                     ...newlySaved,
-                    levels: planLevels
+                    mealOptions: mealOptions
                   });
+                  setTotalCalories(totalCal);
                   setEditModalVisible(true);
                 }
               } catch (err) {
@@ -349,24 +390,24 @@ const Nutrition = () => {
       return;
     }
 
-    // Merr të dhënat e niveleve nga plani i zgjedhur
-    const planLevels = getPlanLevels(goal);
-    
-    // Debug: kontrollo se çfarë të dhënash po merr
-    console.log("Plan Levels:", planLevels);
-    console.log("Goal data:", goal);
-    
     // Krijo objektin editGoal me të dhëna të plota
+    const totalCal = calculateTotalCalories(
+      goal.Breakfast,
+      goal.Lunch,
+      goal.Dinner,
+      goal.Snacks
+    );
+
     setEditGoal({
       id: goal.id,
       name: goal.name,
       calories: goal.calories,
       originalName: goal.originalName,
-      Breakfast: goal.Breakfast || "",
-      Lunch: goal.Lunch || "",
-      Dinner: goal.Dinner || "",
-      Snacks: goal.Snacks || "",
-      levels: planLevels,
+      Breakfast: goal.Breakfast || mealOptions.Breakfast[0].name,
+      Lunch: goal.Lunch || mealOptions.Lunch[0].name,
+      Dinner: goal.Dinner || mealOptions.Dinner[0].name,
+      Snacks: goal.Snacks || mealOptions.Snacks[0].name,
+      mealOptions: mealOptions,
       mealLevels: goal.mealLevels || {
         Breakfast: 'Beginner',
         Lunch: 'Beginner',
@@ -374,6 +415,7 @@ const Nutrition = () => {
         Snacks: 'Beginner',
       }
     });
+    setTotalCalories(totalCal);
     setEditModalVisible(true);
   };
 
@@ -390,7 +432,7 @@ const Nutrition = () => {
     if (emptyFields.length > 0) {
       Alert.alert(
         "Missing Information", 
-        `Please select levels for: ${emptyFields.join(', ')}`
+        `Please select meals for: ${emptyFields.join(', ')}`
       );
       return;
     }
@@ -399,12 +441,13 @@ const Nutrition = () => {
     try {
       const updatedData = {
         name: editGoal.name,
-        calories: editGoal.calories,
+        calories: `${totalCalories} kcal/day`,
+        img: editGoal.img,
+        originalName: editGoal.originalName,
         Breakfast: editGoal.Breakfast,
         Lunch: editGoal.Lunch,
         Dinner: editGoal.Dinner,
         Snacks: editGoal.Snacks,
-        originalName: editGoal.originalName,
         mealLevels: editGoal.mealLevels || {
           Breakfast: 'Beginner',
           Lunch: 'Beginner', 
@@ -432,8 +475,10 @@ const Nutrition = () => {
       // Mbyll modal dhe reset
       setEditModalVisible(false);
       setEditGoal(null);
+      setSelectedMealType(null);
+      setTotalCalories(0);
       
-      Alert.alert("Success", `"${updatedData.name}" has been updated successfully!`);
+      Alert.alert("Success", `"${updatedData.name}" has been updated successfully!\nTotal Calories: ${totalCalories} kcal`);
       
     } catch (error) {
       console.error("❌ Edit error:", error);
@@ -443,31 +488,38 @@ const Nutrition = () => {
     }
   };
 
-  // Funksion për të ndryshuar nivelin për një vakt specifik
-  const handleMealLevelChange = (mealType, level) => {
-    if (!editGoal || !editGoal.levels) {
-      console.log("No editGoal or levels available");
+  // Funksion për të ndryshuar ushqimin për një vakt specifik
+  const handleMealChange = (mealType, meal) => {
+    if (!editGoal) {
+      console.log("No editGoal available");
       return;
     }
 
-    // Merr ushqimin e duhur nga niveli i zgjedhur
-    const selectedMeal = editGoal.levels[level]?.[mealType] || "No meal data available";
+    console.log(`Changing ${mealType} to:`, meal.name);
     
-    console.log(`Changing ${mealType} to ${level}:`, selectedMeal);
-    
-    // Përdor functional update për të shmangur probleme me referencën
-    setEditGoal(prev => {
-      const updatedMealLevels = {
-        ...prev.mealLevels,
-        [mealType]: level
-      };
-      
-      return {
-        ...prev,
-        mealLevels: updatedMealLevels,
-        [mealType]: selectedMeal
-      };
-    });
+    const updatedGoal = {
+      ...editGoal,
+      [mealType]: meal.name
+    };
+
+    // Llogarit kaloritë e reja totale
+    const newTotalCalories = calculateTotalCalories(
+      updatedGoal.Breakfast,
+      updatedGoal.Lunch,
+      updatedGoal.Dinner,
+      updatedGoal.Snacks
+    );
+
+    setEditGoal(updatedGoal);
+    setTotalCalories(newTotalCalories);
+
+    // Mbyll modalën e zgjedhjes pasi të zgjidhet një ushqim
+    setSelectedMealType(null);
+  };
+
+  // Funksion për të hapur modalën e zgjedhjes së ushqimit
+  const openMealSelection = (mealType) => {
+    setSelectedMealType(mealType);
   };
 
   // Shto useEffect për të monitoruar ndryshimet në savedGoals
@@ -479,8 +531,7 @@ const Nutrition = () => {
         Breakfast: goal.Breakfast,
         Lunch: goal.Lunch,
         Dinner: goal.Dinner,
-        Snacks: goal.Snacks,
-        mealLevels: goal.mealLevels
+        Snacks: goal.Snacks
       });
     });
   }, [savedGoals]);
@@ -606,66 +657,53 @@ const Nutrition = () => {
                 <View style={styles.summarySection}>
                   <Text style={[styles.summaryTitle, { color: colors.primary }]}>Your Saved Plans ({savedGoals.length})</Text>
 
-                  {savedGoals.map((goal) => (
-                    <View key={goal.id} style={[styles.summaryCard, { backgroundColor: colors.card }]}>
-                      <Text style={[styles.summaryGoal, { color: colors.text }]}>{goal.name}</Text>
-                      <Text style={[styles.summaryCalories, { color: colors.textSecondary }]}>{goal.calories}</Text>
+                  {savedGoals.map((goal) => {
+                    const goalTotalCalories = calculateTotalCalories(
+                      goal.Breakfast,
+                      goal.Lunch,
+                      goal.Dinner,
+                      goal.Snacks
+                    );
 
-                      {/* Shfaq ushqimet aktuale për çdo vakt */}
-                      <View style={styles.mealsContainer}>
-                        <View style={styles.mealRow}>
-                          <Text style={[styles.mealLabel, { color: colors.text }]}>Breakfast:</Text>
-                          <Text style={[styles.mealValue, { color: colors.textSecondary }]}>
-                            {goal.Breakfast || "Not set"}
+                    return (
+                      <View key={goal.id} style={[styles.summaryCard, { backgroundColor: colors.card }]}>
+                        <View style={styles.summaryHeader}>
+                          <Text style={[styles.summaryGoal, { color: colors.text }]}>{goal.name}</Text>
+                          <Text style={[styles.totalCaloriesBadge, { backgroundColor: colors.primary }]}>
+                            {goalTotalCalories} kcal
                           </Text>
                         </View>
-                        
-                        <View style={styles.mealRow}>
-                          <Text style={[styles.mealLabel, { color: colors.text }]}>Lunch:</Text>
-                          <Text style={[styles.mealValue, { color: colors.textSecondary }]}>
-                            {goal.Lunch || "Not set"}
-                          </Text>
-                        </View>
-                        
-                        <View style={styles.mealRow}>
-                          <Text style={[styles.mealLabel, { color: colors.text }]}>Dinner:</Text>
-                          <Text style={[styles.mealValue, { color: colors.textSecondary }]}>
-                            {goal.Dinner || "Not set"}
-                          </Text>
-                        </View>
-                        
-                        <View style={styles.mealRow}>
-                          <Text style={[styles.mealLabel, { color: colors.text }]}>Snacks:</Text>
-                          <Text style={[styles.mealValue, { color: colors.textSecondary }]}>
-                            {goal.Snacks || "Not set"}
-                          </Text>
-                        </View>
-                      </View>
+                        <Text style={[styles.summaryCalories, { color: colors.textSecondary }]}>{goal.calories}</Text>
 
-                      {/* Shfaq nivelet për çdo vakt nëse ekzistojnë */}
-                      {goal.mealLevels && (
-                        <View style={styles.levelsContainer}>
-                          <Text style={[styles.levelsTitle, { color: colors.textSecondary }]}>Selected Levels:</Text>
-                          <View style={styles.levelsRow}>
-                            {Object.entries(goal.mealLevels).map(([meal, level]) => (
-                              <View key={meal} style={styles.levelBadge}>
-                                <Text style={[styles.levelBadgeText, { color: colors.primary }]}>
-                                  {meal}: {level}
+                        {/* Shfaq ushqimet aktuale për çdo vakt */}
+                        <View style={styles.mealsContainer}>
+                          {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((mealType) => {
+                            const mealCalories = findMealCalories(goal[mealType], mealType);
+                            return (
+                              <View key={mealType} style={styles.mealRow}>
+                                <View style={styles.mealLabelContainer}>
+                                  <Text style={[styles.mealLabel, { color: colors.text }]}>{mealType}:</Text>
+                                  <Text style={[styles.mealCalories, { color: colors.primary }]}>
+                                    {mealCalories} kcal
+                                  </Text>
+                                </View>
+                                <Text style={[styles.mealValue, { color: colors.textSecondary }]}>
+                                  {goal[mealType] || "Not set"}
                                 </Text>
                               </View>
-                            ))}
-                          </View>
+                            );
+                          })}
                         </View>
-                      )}
 
-                      <TouchableOpacity
-                        style={[styles.manageButton, { borderColor: colors.primary, marginTop: 12 }]}
-                        onPress={() => handleEditPlan(goal)}
-                      >
-                        <Text style={[styles.manageButtonText, { color: colors.primary }]}>Edit Meals</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                        <TouchableOpacity
+                          style={[styles.manageButton, { borderColor: colors.primary, marginTop: 12 }]}
+                          onPress={() => handleEditPlan(goal)}
+                        >
+                          <Text style={[styles.manageButtonText, { color: colors.primary }]}>Edit Meals</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
                 </View>
               )}
             </>
@@ -673,78 +711,49 @@ const Nutrition = () => {
           <View style={{ height: 140 }} />
         </ScrollView>
 
-        {/* Modal për editimin e ushqimeve */}
-        <Modal visible={editModalVisible} transparent animationType="slide" onRequestClose={() => setEditModalVisible(false)}>
+        {/* Modal kryesore për editimin e ushqimeve */}
+        <Modal visible={editModalVisible} transparent animationType="slide" onRequestClose={() => { setEditModalVisible(false); setSelectedMealType(null); }}>
           <View style={styles.modalOverlay}>
             <View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
               <Text style={[styles.modalTitle, { color: colors.primary }]}>
                 Edit Your Plan: {editGoal?.name}
               </Text>
 
-              <ScrollView style={{ maxHeight: '70%' }} showsVerticalScrollIndicator={false}>
-                {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((meal) => (
-                  <View key={meal} style={{ marginBottom: 20 }}>
-                    <Text style={[styles.mealHeader, { color: colors.primary }]}>{meal}</Text>
+              {/* Shfaq totalin e kalorive */}
+              <View style={[styles.totalCaloriesContainer, { backgroundColor: colors.primary }]}>
+                <Text style={styles.totalCaloriesText}>Total Daily Calories</Text>
+                <Text style={styles.totalCaloriesNumber}>{totalCalories} kcal</Text>
+              </View>
 
-                    {/* Zgjedhja e nivelit */}
-                    <View style={styles.levelSelector}>
-                      {['Beginner', 'Intermediate', 'Advanced'].map((level) => {
-                        const isSelected = editGoal?.mealLevels?.[meal] === level;
-                        
-                        return (
-                          <TouchableOpacity
-                            key={level}
-                            style={[
-                              styles.levelButton,
-                              {
-                                backgroundColor: isSelected ? colors.primary : colors.background,
-                                borderColor: colors.primary
-                              }
-                            ]}
-                            onPress={() => handleMealLevelChange(meal, level)}
-                          >
-                            <Text style={[
-                              styles.levelButtonText,
-                              { color: isSelected ? '#fff' : colors.text }
-                            ]}>
-                              {level}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
+              <ScrollView style={{ maxHeight: '60%' }} showsVerticalScrollIndicator={false}>
+                {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((mealType) => {
+                  const mealCalories = findMealCalories(editGoal?.[mealType], mealType);
+                  return (
+                    <View key={mealType} style={{ marginBottom: 20 }}>
+                      <View style={styles.mealHeaderRow}>
+                        <Text style={[styles.mealHeader, { color: colors.primary }]}>{mealType}</Text>
+                        <Text style={[styles.mealCaloriesBadge, { backgroundColor: colors.primary }]}>
+                          {mealCalories} kcal
+                        </Text>
+                      </View>
 
-                    {/* Shfaq ushqimin e zgjedhur */}
-                    <View style={[styles.selectedMealContainer, { backgroundColor: colors.background }]}>
-                      <Text style={[styles.selectedLevelText, { color: colors.primary }]}>
-                        Level: {editGoal?.mealLevels?.[meal] || 'Not selected'}
-                      </Text>
-                      <Text style={[styles.selectedMealText, { color: colors.text }]}>
-                        {editGoal?.[meal] || "Please select a level above"}
-                      </Text>
-                    </View>
+                      {/* Shfaq ushqimin aktual */}
+                      <View style={[styles.selectedMealContainer, { backgroundColor: colors.background }]}>
+                        <Text style={[styles.selectedMealText, { color: colors.text }]}>
+                          {editGoal?.[mealType] || "No meal selected"}
+                        </Text>
+                      </View>
 
-                    {/* Opsione të tjera për këtë vakt */}
-                    <Text style={[styles.optionsTitle, { color: colors.textSecondary }]}>
-                      All options for {meal}:
-                    </Text>
-                    <View style={styles.optionsList}>
-                      {editGoal?.levels && Object.entries(editGoal.levels).map(([level, meals]) => (
-                        <View key={level} style={styles.optionItem}>
-                          <Text style={[styles.optionLevel, { 
-                            color: editGoal?.mealLevels?.[meal] === level ? colors.primary : colors.textSecondary,
-                            fontWeight: editGoal?.mealLevels?.[meal] === level ? 'bold' : 'normal'
-                          }]}>
-                            {level}:
-                          </Text>
-                          <Text style={[styles.optionMeal, { color: colors.text }]}>
-                            {meals[meal] || "No meal data available"}
-                          </Text>
-                        </View>
-                      ))}
+                      {/* Butoni për të zgjedhur ushqim */}
+                      <TouchableOpacity
+                        style={[styles.selectMealButton, { backgroundColor: colors.primary }]}
+                        onPress={() => openMealSelection(mealType)}
+                      >
+                        <Text style={styles.selectMealButtonText}>Choose {mealType}</Text>
+                      </TouchableOpacity>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </ScrollView>
 
               <View style={styles.modalButtonsRow}>
@@ -761,12 +770,61 @@ const Nutrition = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.modalCancelButton, { borderColor: colors.primary, borderWidth: 1 }]}
-                  onPress={() => { setEditModalVisible(false); setEditGoal(null); }}
+                  onPress={() => { setEditModalVisible(false); setEditGoal(null); setSelectedMealType(null); setTotalCalories(0); }}
                   disabled={saving}
                 >
                   <Text style={[styles.modalButtonText, { color: colors.primary }]}>Cancel</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal për zgjedhjen e ushqimit */}
+        <Modal visible={!!selectedMealType} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.mealSelectionModal, { backgroundColor: colors.card }]}>
+              <Text style={[styles.mealSelectionTitle, { color: colors.primary }]}>
+                Select {selectedMealType}
+              </Text>
+              
+              <ScrollView style={{ maxHeight: '70%' }} showsVerticalScrollIndicator={false}>
+                {editGoal?.mealOptions?.[selectedMealType]?.map((meal, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.mealOption,
+                      { 
+                        backgroundColor: colors.background,
+                        borderColor: editGoal?.[selectedMealType] === meal.name ? colors.primary : 'transparent'
+                      }
+                    ]}
+                    onPress={() => handleMealChange(selectedMealType, meal)}
+                  >
+                    <View style={styles.mealOptionContent}>
+                      <Text style={[
+                        styles.mealOptionText,
+                        { color: colors.text }
+                      ]}>
+                        {meal.name}
+                      </Text>
+                      <Text style={[styles.mealOptionCalories, { color: colors.primary }]}>
+                        {meal.calories} kcal
+                      </Text>
+                    </View>
+                    {editGoal?.[selectedMealType] === meal.name && (
+                      <Text style={[styles.selectedIndicator, { color: colors.primary }]}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <TouchableOpacity
+                style={[styles.closeSelectionButton, { backgroundColor: colors.primary }]}
+                onPress={() => setSelectedMealType(null)}
+              >
+                <Text style={styles.closeSelectionButtonText}>Close</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>
@@ -809,86 +867,88 @@ const styles = StyleSheet.create({
   summarySection: { marginTop: 20 },
   summaryTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10 },
   summaryCard: { padding: 16, borderRadius: 14, borderWidth: 1, borderColor: '#ddd', marginBottom: 10 },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   summaryGoal: { fontSize: 16, fontWeight: "700" },
   summaryCalories: { fontSize: 14, marginBottom: 10 },
+  totalCaloriesBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
+  },
   mealsContainer: {
     marginTop: 12,
     marginBottom: 12,
   },
   mealRow: {
+    marginBottom: 10,
+    paddingVertical: 4,
+  },
+  mealLabelContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-    paddingVertical: 4,
+    alignItems: 'center',
+    marginBottom: 4,
   },
   mealLabel: {
     fontSize: 14,
     fontWeight: '600',
-    width: '25%',
+  },
+  mealCalories: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   mealValue: {
     fontSize: 14,
-    flex: 1,
-    marginLeft: 12,
     lineHeight: 18,
-  },
-  levelsContainer: {
-    marginTop: 8,
-    marginBottom: 8,
-    padding: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 8,
-  },
-  levelsTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  levelsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  levelBadge: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 6,
-    marginBottom: 4,
-  },
-  levelBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
   },
   manageButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, borderWidth: 1, alignSelf: 'flex-start' },
   manageButtonText: { fontWeight: "700", fontSize: 12 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
   modalContainer: { width: "90%", maxHeight: "80%", borderRadius: 16, padding: 20 },
   modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 16, textAlign: 'center' },
+  totalCaloriesContainer: {
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  totalCaloriesText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  totalCaloriesNumber: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  mealHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   mealHeader: {
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 12,
     color: '#4CAF50',
   },
-  levelSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  levelButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  levelButtonText: {
+  mealCaloriesBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#fff',
   },
   selectedMealContainer: {
     padding: 12,
@@ -900,36 +960,72 @@ const styles = StyleSheet.create({
   selectedMealText: {
     fontSize: 14,
     fontWeight: '500',
-    marginBottom: 4,
   },
-  selectedLevelText: {
-    fontSize: 12,
+  selectMealButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  selectMealButtonText: {
+    color: '#fff',
     fontWeight: '600',
-    marginBottom: 4,
-  },
-  optionsTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  optionsList: {
-    marginBottom: 5,
-  },
-  optionItem: {
-    marginBottom: 4,
-  },
-  optionLevel: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  optionMeal: {
-    fontSize: 11,
-    marginLeft: 8,
-    flex: 1,
+    fontSize: 14,
   },
   modalButtonsRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
   modalButton: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, alignItems: "center", flex: 1, marginHorizontal: 5 },
   modalSaveButton: { backgroundColor: '#4CAF50' },
   modalCancelButton: { backgroundColor: '#f0f0f0' },
-  modalButtonText: { color: "#fff", fontWeight: "700" }
+  modalButtonText: { color: "#fff", fontWeight: "700" },
+  
+  // Stilet për modalën e zgjedhjes së ushqimit
+  mealSelectionModal: { 
+    width: "90%", 
+    maxHeight: "80%", 
+    borderRadius: 16, 
+    padding: 20 
+  },
+  mealSelectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  mealOption: {
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  mealOptionContent: {
+    flex: 1,
+  },
+  mealOptionText: {
+    fontSize: 14,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  mealOptionCalories: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  selectedIndicator: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  closeSelectionButton: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  closeSelectionButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
 });
