@@ -85,7 +85,7 @@ const Signup = () => {
 
       const result = await signUpUser(fullName, "", email, password);
       if (result.success) {
-        router.replace("/home");
+        router.replace("/");
       } else {
         setErrors((prev) => ({
           ...prev,
