@@ -562,10 +562,7 @@ const Nutrition = () => {
       setSelectedMealType(null);
       setTotalCalories(0);
 
-      Alert.alert(
-        "Success",
-        `"${payload.name}" has been updated successfully!\nTotal Calories: ${totalCalories} kcal`
-      );
+      
     } catch (err) {
       console.error("❌ Edit error:", err);
       Alert.alert("Error", "Could not update plan. Please try again.");
