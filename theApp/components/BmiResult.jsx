@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
-  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,7 +16,6 @@ const BmiResult = ({
   isDarkMode,
   isLoggedUser,
 }) => {
-  // Status për GUEST user (vetem kur ska login)
   const getStatus = (value) => {
     if (value < 18.5) return "Underweight";
     if (value < 25) return "Normal";
@@ -34,7 +31,7 @@ const BmiResult = ({
   };
 
   // ================================
-  // CASE 1: USER IS NOT LOGGED → SHOW ONLY RESULT
+  // GUEST MODE
   // ================================
   if (!isLoggedUser) {
     return (
@@ -71,36 +68,15 @@ const BmiResult = ({
   }
 
   // ================================
-  // CASE 2: USER LOGGED → SHOW ONLY TABLE
+  // LOGGED USER MODE — TABLE (NO FLATLIST)
   // ================================
-
-  const renderItem = ({ item }) => (
-    <View style={[styles.row, { backgroundColor: colors.card }]}>
-      <Text style={[styles.cell, { flex: 1, color: colors.text }]}>
-        {new Date(item.date).toLocaleDateString()}
-      </Text>
-
-      <Text style={[styles.cell, { flex: 1, color: getStatusColor(item.bmi) }]}>
-        {getStatus(item.bmi)}
-      </Text>
-
-      <Text style={[styles.cell, { flex: 1, color: colors.text }]}>
-        {item.bmi}
-      </Text>
-
-      <TouchableOpacity onPress={() => onDelete(item.id)} style={styles.delButton}>
-        <Text style={styles.delText}>🗑️</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <SafeAreaView style={{ width: "100%", marginTop: 20 }}>
       <Text style={[styles.tableTitle, { color: colors.text }]}>
         BMI History
       </Text>
 
-      {/* TABLE HEADER */}
+      {/* HEADER */}
       <View
         style={[
           styles.headerRow,
@@ -121,31 +97,51 @@ const BmiResult = ({
         </Text>
       </View>
 
-      {/* LIST */}
-      <FlatList
-        data={history}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        ListEmptyComponent={
-          <View
-            style={[
-              styles.emptyRow,
-              { backgroundColor: colors.card },
-            ]}
-          >
-            <Text style={{ color: colors.textSecondary }}>
-              No history yet.
-            </Text>
+      {/* ROWS MANUALLY */}
+      <View style={{ maxHeight: 300 }}>
+        {history.length === 0 && (
+          <View style={[styles.emptyRow, { backgroundColor: colors.card }]}>
+            <Text style={{ color: colors.textSecondary }}>No history yet.</Text>
           </View>
-        }
-        style={{ maxHeight: 320 }}
-      />
+        )}
+
+        {history.map((item) => (
+          <View
+            key={item.id}
+            style={[styles.row, { backgroundColor: colors.card }]}
+          >
+            <Text style={[styles.cell, { flex: 1, color: colors.text }]}>
+              {new Date(item.date).toLocaleDateString()}
+            </Text>
+
+            <Text
+              style={[
+                styles.cell,
+                { flex: 1, color: getStatusColor(item.bmi) },
+              ]}
+            >
+              {getStatus(item.bmi)}
+            </Text>
+
+            <Text style={[styles.cell, { flex: 1, color: colors.text }]}>
+              {item.bmi}
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => onDelete(item.id)}
+              style={styles.delButton}
+            >
+              <Text style={styles.delText}>🗑️</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  // === Guest mode UI ===
+  // Guest mode
   guestBox: {
     padding: 25,
     borderRadius: 15,
@@ -166,22 +162,10 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 
-  // === Table mode UI ===
-  tableTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-
-  headerRow: {
-    flexDirection: "row",
-    paddingVertical: 12,
-  },
-  headerCell: {
-    fontSize: 14,
-    textAlign: "center",
-    fontWeight: "bold",
-  },
+  // Table
+  tableTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
+  headerRow: { flexDirection: "row", paddingVertical: 12 },
+  headerCell: { fontSize: 14, textAlign: "center", fontWeight: "bold" },
 
   row: {
     flexDirection: "row",
@@ -190,10 +174,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     alignItems: "center",
   },
-  cell: {
-    fontSize: 14,
-    textAlign: "center",
-  },
+  cell: { fontSize: 14, textAlign: "center" },
 
   delButton: {
     padding: 5,
@@ -203,16 +184,9 @@ const styles = StyleSheet.create({
     borderColor: "#f44336",
     marginRight: 5,
   },
-  delText: {
-    color: "#f44336",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+  delText: { color: "#f44336", fontSize: 16, fontWeight: "bold" },
 
-  emptyRow: {
-    padding: 15,
-    alignItems: "center",
-  },
+  emptyRow: { padding: 15, alignItems: "center" },
 });
 
 export default BmiResult;

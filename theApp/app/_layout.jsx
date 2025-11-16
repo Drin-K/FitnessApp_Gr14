@@ -1,31 +1,34 @@
+// app/_layout.jsx
 import React from "react";
 import { View, StyleSheet, Platform } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import { ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
 
 const LayoutContent = () => {
   const { colors } = useTheme();
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // 🔁 Kontrollo statusin e përdoruesit për routing
+  // Routing i rregulluar — pa loops, pa logout fake
   React.useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.replace("/"); // nëse është i kyçur → Home
-      } else {
-        router.replace("/login"); // nëse s’është → Login
-      }
-    }
-  }, [user, loading]);
+    if (loading) return; // MOS REDIRECTO deri sa Firebase ta konfirmon gjendjen
 
+    if (user) {
+      // Nëse user është i kyçur → shko në Home
+      router.replace("/");
+    } else {
+      // Nëse user nuk është i kyçur → shko në Login
+      router.replace("/login");
+    }
+  }, [loading, user]);
+
+  // Loading screen derisa Firebase Auth të përgjigjet
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#00ff88" />
       </View>
     );
@@ -57,5 +60,12 @@ export default function Layout() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

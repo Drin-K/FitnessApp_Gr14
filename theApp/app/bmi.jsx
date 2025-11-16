@@ -228,7 +228,10 @@ const BMI = () => {
         )}
       </ScrollView>
 
-      <List onNavigate={(p) => router.push(p)} />
+     <View style={styles.footer}>
+  <List onNavigate={(p) => router.push(p)} />
+</View>
+
     </SafeAreaView>
   );
 };
@@ -287,6 +290,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  footer: {
+  flexShrink: 0,
+  backgroundColor: "transparent",
+}
+
 });
 
 export default BMI;
