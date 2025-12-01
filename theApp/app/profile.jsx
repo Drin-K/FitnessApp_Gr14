@@ -18,11 +18,14 @@ import { useTheme } from "../context/ThemeContext";
 import { useRouter } from "expo-router";
 import List from "../components/List";
 
-import { auth, db } from "../firebase";
+import { auth, db, storage } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { logoutUser } from "../services/authService";
 import { onSnapshot } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 
 const { width } = Dimensions.get("window");
 
@@ -31,6 +34,7 @@ const ProfileScreen = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
@@ -80,6 +84,128 @@ const ProfileScreen = () => {
 
     return () => unsubscribeAuth();
   }, []);
+
+  const requestCameraPermission = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Sorry, we need camera permissions to make this work!');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const requestMediaLibraryPermission = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Sorry, we need media library permissions to make this work!');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const uploadImageToFirebase = async (uri) => {
+    try {
+      setUploading(true);
+      
+      // Convert URI to blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      // Create a reference to the storage location
+      const storageRef = ref(storage, `profile-pictures/${user.uid}-${Date.now()}.jpg`);
+      
+      // Upload the file
+      await uploadBytes(storageRef, blob);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update Firestore with the new photo URL
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        photo: downloadURL
+      });
+      
+      // Update local state
+      setUser(prev => ({ ...prev, photo: downloadURL }));
+      
+      Alert.alert("Success", "Profile picture updated successfully!");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Alert.alert("Error", "Failed to upload profile picture. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const takePhoto = async () => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0].uri) {
+        await uploadImageToFirebase(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      Alert.alert("Error", "Failed to take photo. Please try again.");
+    }
+  };
+
+  const pickImage = async () => {
+    const hasPermission = await requestMediaLibraryPermission();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0].uri) {
+        await uploadImageToFirebase(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image. Please try again.");
+    }
+  };
+
+  const handleImageOption = () => {
+    if (!user) return;
+    
+    Alert.alert(
+      "Update Profile Picture",
+      "Choose an option",
+      [
+        {
+          text: "Take Photo",
+          onPress: takePhoto
+        },
+        {
+          text: "Choose from Gallery",
+          onPress: pickImage
+        },
+        {
+          text: "Cancel",
+          style: "cancel"
+        }
+      ]
+    );
+  };
 
   const handleLogout = async () => {
     const result = await logoutUser();
@@ -144,10 +270,25 @@ const ProfileScreen = () => {
           ) : (
             <>
               <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
-                <Image
-                  source={{ uri: user.photo }}
-                  style={styles.avatar}
-                />
+                <View style={styles.avatarContainer}>
+                  {uploading ? (
+                    <View style={[styles.avatar, styles.avatarLoading]}>
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    </View>
+                  ) : (
+                    <Image
+                      source={{ uri: user.photo }}
+                      style={styles.avatar}
+                    />
+                  )}
+                  <TouchableOpacity
+                    style={[styles.cameraButton, { backgroundColor: colors.primary }]}
+                    onPress={handleImageOption}
+                    disabled={uploading}
+                  >
+                    <Text style={styles.cameraEmoji}>📷</Text>
+                  </TouchableOpacity>
+                </View>
                 <Text style={[styles.name, { color: colors.text }]}>
                   {user.fullName}
                 </Text>
@@ -289,13 +430,41 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e9ecef",
   },
+  avatarContainer: {
+    position: "relative",
+    marginBottom: 16,
+  },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 16,
     borderWidth: 2,
     borderColor: "#dee2e6",
+  },
+  avatarLoading: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f0f0f0",
+  },
+  cameraButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "white",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  cameraEmoji: {
+    fontSize: 18,
   },
   name: { 
     fontSize: 22, 
