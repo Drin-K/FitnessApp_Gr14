@@ -18,16 +18,31 @@ import { useTheme } from "../context/ThemeContext";
 import { useRouter } from "expo-router";
 import List from "../components/List";
 
-import { auth, db, storage } from "../firebase";
+import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { logoutUser } from "../services/authService";
 import { onSnapshot } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system";
 
 const { width } = Dimensions.get("window");
+
+// Helper function to compress base64 string (reduces size by ~30-50%)
+const compressBase64 = (base64String) => {
+  // Remove data URL prefix if present
+  const base64Data = base64String.includes('base64,') 
+    ? base64String.split('base64,')[1] 
+    : base64String;
+  
+  return base64Data;
+};
+
+// Helper function to check if base64 string is too large for Firestore (1MB limit)
+const isBase64TooLarge = (base64String) => {
+  // Approximate base64 size calculation (base64 is about 33% larger than binary)
+  const sizeInBytes = (base64String.length * 3) / 4;
+  return sizeInBytes > 900000; // Keep under 1MB with some buffer
+};
 
 const ProfileScreen = () => {
   const { colors, isDarkMode } = useTheme();
@@ -51,14 +66,29 @@ const ProfileScreen = () => {
         (snap) => {
           if (snap.exists()) {
             const data = snap.data();
+            
+            // Check if photo is stored as base64
+            let photoUrl = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+            
+            if (data.photo) {
+              // If it's a base64 string, create data URL
+              if (data.photo.startsWith('data:image') || data.photo.length > 1000) {
+                // It's already a data URL or base64
+                photoUrl = data.photo;
+              } else if (data.photo.includes('firebasestorage') || data.photo.includes('http')) {
+                // It's a regular URL (from previous Firebase Storage uploads)
+                photoUrl = data.photo;
+              }
+            }
 
             setUser({
               uid: firebaseUser.uid,
               fullName: `${data.firstName || ""} ${data.lastName || ""}`.trim() || "User",
               email: data.email || firebaseUser.email,
-              photo: data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+              photo: photoUrl,
               height: data.height || "",
               weight: data.weight || "",
+              photoType: data.photoType || 'url', // 'url' or 'base64'
             });
           } else {
             setUser({
@@ -68,6 +98,7 @@ const ProfileScreen = () => {
               photo: firebaseUser.photoURL || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
               height: "",
               weight: "",
+              photoType: 'url',
             });
           }
 
@@ -85,77 +116,101 @@ const ProfileScreen = () => {
     return () => unsubscribeAuth();
   }, []);
 
-  const requestCameraPermission = async () => {
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Sorry, we need camera permissions to make this work!');
-        return false;
+  // Request permissions when component mounts
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== 'web') {
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+        await ImagePicker.requestCameraPermissionsAsync();
       }
-    }
-    return true;
-  };
+    })();
+  }, []);
 
-  const requestMediaLibraryPermission = async () => {
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Sorry, we need media library permissions to make this work!');
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const uploadImageToFirebase = async (uri) => {
+  const saveBase64ToFirestore = async (base64String, originalUri) => {
     try {
       setUploading(true);
+      console.log("Starting base64 upload...");
       
-      // Convert URI to blob
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      // Check if base64 is too large for Firestore
+      if (isBase64TooLarge(base64String)) {
+        Alert.alert(
+          "Image Too Large", 
+          "The selected image is too large. Please choose a smaller image or take a photo with lower resolution.",
+          [{ text: "OK" }]
+        );
+        setUploading(false);
+        return;
+      }
       
-      // Create a reference to the storage location
-      const storageRef = ref(storage, `profile-pictures/${user.uid}-${Date.now()}.jpg`);
+      // Compress the base64 string
+      const compressedBase64 = compressBase64(base64String);
+      console.log("Base64 compressed, length:", compressedBase64.length);
       
-      // Upload the file
-      await uploadBytes(storageRef, blob);
+      // Create data URL for display
+      const dataUrl = `data:image/jpeg;base64,${compressedBase64}`;
       
-      // Get the download URL
-      const downloadURL = await getDownloadURL(storageRef);
-      
-      // Update Firestore with the new photo URL
+      // Update Firestore with base64 string
       const userRef = doc(db, "users", user.uid);
+      console.log("Updating Firestore with base64...");
+      
       await updateDoc(userRef, {
-        photo: downloadURL
+        photo: compressedBase64, // Store compressed base64 (without data URL prefix)
+        photoType: 'base64',
+        photoUpdatedAt: new Date().toISOString(),
+        // Also store a thumbnail for faster loading if needed
+        photoThumbnail: compressedBase64.substring(0, 5000), // First 5000 chars as thumbnail
       });
       
-      // Update local state
-      setUser(prev => ({ ...prev, photo: downloadURL }));
+      console.log("Firestore updated successfully with base64");
+      
+      // Update local state with data URL for immediate display
+      setUser(prev => ({ 
+        ...prev, 
+        photo: dataUrl,
+        photoType: 'base64'
+      }));
       
       Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {
-      console.error("Error uploading image:", error);
-      Alert.alert("Error", "Failed to upload profile picture. Please try again.");
+      console.error("Error saving to Firestore:", error);
+      
+      let errorMessage = "Failed to save profile picture. ";
+      
+      if (error.code === 'permission-denied') {
+        errorMessage += "You don't have permission to update your profile. Check your Firestore rules.";
+      } else if (error.code === 'failed-precondition') {
+        errorMessage += "The document might not exist or is in an invalid state.";
+      } else if (error.message.includes('size')) {
+        errorMessage += "The image is too large for Firestore. Please choose a smaller image.";
+      } else {
+        errorMessage += error.message;
+      }
+      
+      Alert.alert("Save Error", errorMessage);
     } finally {
       setUploading(false);
     }
   };
 
   const takePhoto = async () => {
-    const hasPermission = await requestCameraPermission();
-    if (!hasPermission) return;
-
     try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'We need camera access to take photos');
+        return;
+      }
+
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.8,
+        quality: 0.4, // Lower quality for smaller file size (0.4 instead of 0.5)
+        base64: true, // Get base64 string
       });
 
-      if (!result.canceled && result.assets[0].uri) {
-        await uploadImageToFirebase(result.assets[0].uri);
+      if (!result.canceled && result.assets[0].base64) {
+        console.log("Photo taken, base64 length:", result.assets[0].base64.length);
+        await saveBase64ToFirestore(result.assets[0].base64, result.assets[0].uri);
       }
     } catch (error) {
       console.error("Error taking photo:", error);
@@ -164,19 +219,24 @@ const ProfileScreen = () => {
   };
 
   const pickImage = async () => {
-    const hasPermission = await requestMediaLibraryPermission();
-    if (!hasPermission) return;
-
     try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'We need photo library access to select images');
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.8,
+        quality: 0.4, // Lower quality for smaller file size
+        base64: true, // Get base64 string
       });
 
-      if (!result.canceled && result.assets[0].uri) {
-        await uploadImageToFirebase(result.assets[0].uri);
+      if (!result.canceled && result.assets[0].base64) {
+        console.log("Image picked, base64 length:", result.assets[0].base64.length);
+        await saveBase64ToFirestore(result.assets[0].base64, result.assets[0].uri);
       }
     } catch (error) {
       console.error("Error picking image:", error);
@@ -277,8 +337,23 @@ const ProfileScreen = () => {
                     </View>
                   ) : (
                     <Image
-                      source={{ uri: user.photo }}
+                      source={{ 
+                        uri: user.photo.startsWith('data:image') 
+                          ? user.photo 
+                          : user.photo.includes('firebasestorage') || user.photo.includes('http')
+                            ? user.photo
+                            : `data:image/jpeg;base64,${user.photo}`
+                      }}
                       style={styles.avatar}
+                      onError={(error) => {
+                        console.error("Image load error:", error.nativeEvent.error);
+                        // Fallback to default avatar
+                        setUser(prev => ({ 
+                          ...prev, 
+                          photo: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+                          photoType: 'url'
+                        }));
+                      }}
                     />
                   )}
                   <TouchableOpacity
@@ -358,6 +433,9 @@ const ProfileScreen = () => {
                     ? "Your profile is complete. You can track your BMI progress with accurate data."
                     : "Add your height and weight for personalized BMI tracking and better insights."
                   }
+                </Text>
+                <Text style={[styles.infoNote, { color: colors.textSecondary, fontStyle: 'italic', marginTop: 8 }]}>
+                  Profile pictures are stored as base64 strings in Firestore
                 </Text>
               </View>
             </>
@@ -531,6 +609,9 @@ const styles = StyleSheet.create({
   infoDescription: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  infoNote: {
+    fontSize: 12,
   },
   footer: { 
     flexShrink: 0, 
