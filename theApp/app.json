@@ -28,6 +28,8 @@
     "scheme": "app-scheme",
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "plugins": ["expo-notifications"]
+
   }
 }
