@@ -10,6 +10,19 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 
+// ⭐ ADDED FOR NOTIFICATIONS
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
+
+// ⭐ Required for Android channels
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldSetBadge: true,
+    shouldPlaySound: true,
+  }),
+});
+
 export default function WorkoutSession() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -22,15 +35,40 @@ export default function WorkoutSession() {
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [running, setRunning] = useState(true);
 
-  // Split routine items
   const routineList = routine.split("|");
+  const [completed, setCompleted] = useState(routineList.map(() => false));
 
-  const [completed, setCompleted] = useState(
-    routineList.map(() => false)
-  );
-
-  // Circular progress animation
   const progress = new Animated.Value(0);
+
+  // ⭐ Ask for notification permission once
+  useEffect(() => {
+    async function requestPerms() {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== "granted") {
+        await Notifications.requestPermissionsAsync();
+      }
+
+      // Android channel
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("workout", {
+          name: "Workout Notifications",
+          importance: Notifications.AndroidImportance.HIGH,
+        });
+      }
+    }
+    requestPerms();
+  }, []);
+
+  // ⭐ Schedule notification when timer finishes
+  const sendWorkoutFinishedNotification = async () => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "🏋️ Workout Completed!",
+        body: "Great job! You finished your workout session.",
+      },
+      trigger: null, // immediate
+    });
+  };
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -48,6 +86,10 @@ export default function WorkoutSession() {
       setTimeLeft((t) => {
         if (t <= 1) {
           clearInterval(interval);
+
+          // ⭐ Send notification when timer hits 0
+          sendWorkoutFinishedNotification();
+
           return 0;
         }
         return t - 1;
@@ -110,24 +152,22 @@ export default function WorkoutSession() {
         ))}
       </ScrollView>
 
-      {/* Completion Message */}
       {allDone && (
         <Text style={styles.complete}>Workout Completed!</Text>
       )}
 
-      {/* Exit */}
       <TouchableOpacity style={styles.exitButton} onPress={() => router.back()}>
         <Text style={styles.exitText}>End Session</Text>
       </TouchableOpacity>
     </LinearGradient>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 65,
   },
-
   title: {
     fontSize: 32,
     fontWeight: "900",
@@ -137,13 +177,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
-
   timerContainer: {
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
   },
-
   timerCircle: {
     width: 180,
     height: 180,
@@ -156,13 +194,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.7,
     shadowRadius: 15,
   },
-
   timerText: {
     fontSize: 42,
     fontWeight: "bold",
     color: "#ffffff",
   },
-
   pauseButton: {
     backgroundColor: "#00ff88",
     padding: 12,
@@ -171,18 +207,15 @@ const styles = StyleSheet.create({
     width: 160,
     marginBottom: 20,
   },
-
   pauseText: {
     textAlign: "center",
     fontWeight: "800",
     fontSize: 18,
     color: "#002b1d",
   },
-
   list: {
     marginTop: 10,
   },
-
   exercise: {
     padding: 16,
     backgroundColor: "#012316",
@@ -194,19 +227,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
   },
-
   exerciseDone: {
     backgroundColor: "#044d2a",
     borderColor: "#00ff88",
     shadowOpacity: 0.3,
   },
-
   exerciseText: {
     color: "#baffdd",
     fontSize: 18,
     fontWeight: "700",
   },
-
   complete: {
     marginTop: 15,
     fontSize: 24,
@@ -214,14 +244,12 @@ const styles = StyleSheet.create({
     color: "#00ff88",
     textAlign: "center",
   },
-
   exitButton: {
     backgroundColor: "#ff4444",
     padding: 14,
     borderRadius: 10,
     marginTop: 22,
   },
-
   exitText: {
     color: "white",
     fontSize: 18,
