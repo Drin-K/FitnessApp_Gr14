@@ -7,25 +7,46 @@ import {
   StatusBar,
   TouchableOpacity,
   Image,
+  Linking,
+  Platform,
 } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 import List from "../components/List";
 
 const Index = () => {
   const router = useRouter();
   const { colors, isDarkMode } = useTheme();
 
+  // 📍 Google Maps – lokacioni i palestrës
+  const openMaps = () => {
+    const latitude = 42.6629;   // Ndrysho sipas lokacionit tuaj
+    const longitude = 21.1655;
+
+    const url = Platform.select({
+      ios: `maps://?q=${latitude},${longitude}`,
+      android: `geo:${latitude},${longitude}?q=${latitude},${longitude}`,
+      default: `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
+    });
+
+    Linking.openURL(url);
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar 
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
       />
+
       <View style={styles.background}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.topContainer}>
             <Text style={[styles.topTitle, { color: colors.primary }]}>
               ILLYRIAN GYM
@@ -33,8 +54,15 @@ const Index = () => {
           </View>
 
           <View style={styles.headerWrap}>
-            <Text style={[styles.beFit, { color: colors.text }]}>BE FIT</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            <Text style={[styles.beFit, { color: colors.text }]}>
+              BE FIT
+            </Text>
+            <Text
+              style={[
+                styles.subtitle,
+                { color: colors.textSecondary },
+              ]}
+            >
               Welcome back — little steps, big changes.
             </Text>
           </View>
@@ -45,27 +73,59 @@ const Index = () => {
               style={styles.runner}
               resizeMode="contain"
             />
+
             <Text style={[styles.heroText, { color: colors.text }]}>
               Start small. Stay consistent.
             </Text>
 
             <View style={styles.actionRow}>
-              <TouchableOpacity 
-                style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+              <TouchableOpacity
+                style={[
+                  styles.primaryBtn,
+                  { backgroundColor: colors.primary },
+                ]}
                 onPress={() => router.push("/workouts")}
               >
-                <Text style={styles.primaryText}>Start Workout</Text>
+                <Text style={styles.primaryText}>
+                  Start Workout
+                </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={[styles.ghostBtn, { borderColor: colors.border }]}
+              <TouchableOpacity
+                style={[
+                  styles.ghostBtn,
+                  { borderColor: colors.border },
+                ]}
                 onPress={() => router.push("/nutrition")}
               >
-                <Text style={[styles.ghostText, { color: colors.text }]}>
+                <Text
+                  style={[
+                    styles.ghostText,
+                    { color: colors.text },
+                  ]}
+                >
                   View Meal Plan
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* 🔍 FIND US BUTTON */}
+            <TouchableOpacity
+              style={[
+                styles.findUsBtn,
+                { borderColor: colors.primary },
+              ]}
+              onPress={openMaps}
+            >
+              <Text
+                style={[
+                  styles.findUsText,
+                  { color: colors.primary },
+                ]}
+              >
+                Find Us
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={{ height: 160 }} />
@@ -84,27 +144,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   background: {
-    marginTop:40,
+    marginTop: 40,
     flex: 1,
   },
   scroll: {
     alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 20,
-  },
-  loginButton: {
-    position: "absolute",
-    top: 20,
-    left: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 25,
-    zIndex: 1000,
-  },
-  loginText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
   topContainer: {
     alignItems: "center",
@@ -146,9 +192,9 @@ const styles = StyleSheet.create({
   runner: {
     width: 400,
     height: 400,
-    marginBottom:-30,
-    marginRight:20,
-    marginTop:-20,
+    marginBottom: -30,
+    marginRight: 20,
+    marginTop: -20,
   },
   heroText: {
     fontSize: 15,
@@ -179,5 +225,18 @@ const styles = StyleSheet.create({
   },
   ghostText: {
     fontWeight: "600",
+  },
+
+  /* FIND US */
+  findUsBtn: {
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 26,
+    borderRadius: 25,
+    borderWidth: 2,
+  },
+  findUsText: {
+    fontWeight: "800",
+    letterSpacing: 1,
   },
 });
