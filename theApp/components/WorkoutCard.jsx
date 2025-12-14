@@ -2,16 +2,16 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
-const WorkoutCard = ({ title, duration, functionality, image, onEdit, isLoggedIn  }) => {
+const WorkoutCard = ({ title, duration, functionality, image, onEdit, isLoggedIn }) => {
+  console.log("🔄 Rendering WorkoutCard:", title);
+
   return (
     <View style={styles.card}>
-      {/* ✏️ Ikona Edit lart majtas */}
       {isLoggedIn && (
- <TouchableOpacity style={styles.editIcon} onPress={onEdit}>
-        <Icon name="pencil" size={18} color="#fff" />
-      </TouchableOpacity>
-)}
-
+        <TouchableOpacity style={styles.editIcon} onPress={onEdit}>
+          <Icon name="pencil" size={18} color="#fff" />
+        </TouchableOpacity>
+      )}
 
       <Image source={image} style={styles.image} resizeMode="cover" />
 
@@ -24,7 +24,10 @@ const WorkoutCard = ({ title, duration, functionality, image, onEdit, isLoggedIn
   );
 };
 
-export default WorkoutCard;
+/**
+ * ✅ React.memo parandalon re-render nëse props nuk ndryshojnë
+ */
+export default React.memo(WorkoutCard);
 
 const styles = StyleSheet.create({
   card: {

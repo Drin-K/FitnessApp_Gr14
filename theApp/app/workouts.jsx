@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -30,7 +30,6 @@ const showAlert = (title, message) => {
   }
 };
 
-
 const defaultImages = {
   "default-1": require("../assets/images/workout1.jpg"),
   "default-2": require("../assets/images/workout2.jpg"),
@@ -40,37 +39,6 @@ const defaultImages = {
   "default-6": require("../assets/images/workout6.webp"),
 };
 
-
-const seedInitialWorkouts = async (userId) => {
-  try {
-    const data = await getWorkouts(userId);
-
-    // Nëse user-i ka tashmë workouts → mos bëj seed
-    if (data.length > 0) return false;
-
-    // Përgatit workouts me ID reale
-    const prepared = initialWorkouts.map((w) => ({
-      id: `default-${w.id}`,
-      title: w.title,
-      duration: w.duration,
-      functionality: w.functionality,
-      routine: w.routine,
-      imageBase64: null, // default images nuk jane base64
-    }));
-
-    // Ruaji në DB
-    for (const workout of prepared) {
-      await saveWorkout(userId, workout);
-    }
-
-    return true;
-  } catch (err) {
-    console.log("Seed error:", err);
-    return false;
-  }
-};
-
-// ✅ Default workouts
 const initialWorkouts = [
   {
     id: "1",
@@ -122,6 +90,32 @@ const initialWorkouts = [
   },
 ];
 
+const seedInitialWorkouts = async (userId) => {
+  try {
+    const data = await getWorkouts(userId);
+
+    if (data.length > 0) return false;
+
+    const prepared = initialWorkouts.map((w) => ({
+      id: `default-${w.id}`,
+      title: w.title,
+      duration: w.duration,
+      functionality: w.functionality,
+      routine: w.routine,
+      imageBase64: null,
+    }));
+
+    for (const workout of prepared) {
+      await saveWorkout(userId, workout);
+    }
+
+    return true;
+  } catch (err) {
+    console.log("Seed error:", err);
+    return false;
+  }
+};
+
 const Workouts = () => {
   const router = useRouter();
   const { colors, isDarkMode } = useTheme();
@@ -131,9 +125,6 @@ const Workouts = () => {
   const [loading, setLoading] = useState(false);
   const isLoggedIn = !!auth.currentUser;
 
-
-
-  // Form state
   const [customTitle, setCustomTitle] = useState("");
   const [customDuration, setCustomDuration] = useState("");
   const [customDescription, setCustomDescription] = useState("");
@@ -142,76 +133,73 @@ const Workouts = () => {
   const [base64Image, setBase64Image] = useState(null);
   const [editingWorkoutId, setEditingWorkoutId] = useState(null);
 
-  const toggleExpand = (id) => setExpandedId(expandedId === id ? null : id);
+  // ✅ Memoized toggle function
+  const toggleExpand = useCallback((id) => {
+    setExpandedId(prev => prev === id ? null : id);
+  }, []);
 
-  const pickImageWeb = () => {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
+  // ✅ Memoized pick image function
+  const pickImageWeb = useCallback(() => {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
 
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return resolve(null);
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return resolve(null);
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result.split(",")[1]; 
-        resolve(base64);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result.split(",")[1];
+          resolve(base64);
+        };
+        reader.readAsDataURL(file);
       };
-      reader.readAsDataURL(file);
-    };
 
-    input.click();
-  });
-};
-
-  // 📸 Pick image (base64)
-  const pickImage = async () => {
-  try {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      allowsEditing: true,
-      quality: 0.8,
-      base64: true,
+      input.click();
     });
+  }, []);
 
-    if (result.canceled) return;
-    const asset = result.assets?.[0];
-    if (!asset?.uri) return;
+  // ✅ Memoized pick image function
+  const pickImage = useCallback(async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        quality: 0.8,
+        base64: true,
+      });
 
-    setImage(asset.uri);
-    if (asset.base64) setBase64Image(asset.base64);
-  } catch (error) {
-    console.error("❌ Error in pickImage:", error);
-    Alert.alert("Error", "Failed to pick image. Try again.");
-  }
-};
+      if (result.canceled) return;
+      const asset = result.assets?.[0];
+      if (!asset?.uri) return;
 
+      setImage(asset.uri);
+      if (asset.base64) setBase64Image(asset.base64);
+    } catch (err) {
+      Alert.alert("Error", "Failed to pick image");
+    }
+  }, []);
 
-  // 🔥 Fetch workouts
-  useEffect(() => {
-  const loadWorkouts = async () => {
+  // ✅ Memoized load workouts function
+  const loadWorkouts = useCallback(async () => {
     const user = auth.currentUser;
     if (!user) {
-  const mappedDefaults = initialWorkouts.map((w) => ({
-    ...w,
-    id: `default-${w.id}`,   // TRANSFORMO ID-të që të përputhen me defaultImages
-  }));
+      const mappedDefaults = initialWorkouts.map((w) => ({
+        ...w,
+        id: `default-${w.id}`,
+      }));
 
-  setWorkouts(mappedDefaults);
-  return;
-}
-
+      setWorkouts(mappedDefaults);
+      return;
+    }
 
     setLoading(true);
 
-    // 1) Provo me seed default workouts herën e parë
     await seedInitialWorkouts(user.uid);
 
-    // 2) Pastaj i merr 100% nga Firebase
     const data = await getWorkouts(user.uid);
-
     const sanitized = data.map((w, index) => ({
       ...w,
       id: w.id ?? `custom-${index}-${Date.now()}`,
@@ -219,14 +207,15 @@ const Workouts = () => {
 
     setWorkouts(data);
     setLoading(false);
-  };
+  }, []);
 
-  loadWorkouts();
-}, []);
+  // 🔥 Fetch workouts
+  useEffect(() => {
+    loadWorkouts();
+  }, [loadWorkouts]);
 
-
-  // ✏️ Handle Edit
-  const handleEditWorkout = (workout) => {
+  // ✅ Memoized edit workout handler
+  const handleEditWorkout = useCallback((workout) => {
     setEditingWorkoutId(workout.id);
     setCustomTitle(workout.title);
     setCustomDuration(workout.duration);
@@ -243,24 +232,24 @@ const Workouts = () => {
     }
 
     setActiveTab("Custom");
-  };
+  }, []);
 
-  // 💾 Add or Update
-  const handleAddOrUpdate = async () => {
+  // ✅ Memoized add/update workout handler
+  const handleAddOrUpdate = useCallback(async () => {
     if (!customTitle.trim() || !customRoutine.trim())
-      return showAlert("Error", "Please fill all fields.");;
+      return showAlert("Error", "Please fill all fields.");
 
     const user = auth.currentUser;
     if (!user) return Alert.alert("Error", "You must be logged in.");
 
     try {
       const workoutData = {
-  title: customTitle,
-  duration: customDuration || "30 min",
-  functionality: customDescription,
-  imageBase64: base64Image ??  null,
-  routine: customRoutine.split("\n").filter((r) => r.trim() !== ""),
-};
+        title: customTitle,
+        duration: customDuration || "30 min",
+        functionality: customDescription,
+        imageBase64: base64Image ?? null,
+        routine: customRoutine.split("\n").filter((r) => r.trim() !== ""),
+      };
 
       if (editingWorkoutId) {
         const updatedList = workouts.map((w) =>
@@ -276,7 +265,7 @@ const Workouts = () => {
         };
         await saveWorkout(user.uid, newWorkout);
         setWorkouts([...workouts, newWorkout]);
-        showAlert("Success","Workout added succesfully !");
+        showAlert("Success", "Workout added succesfully !");
       }
 
       setEditingWorkoutId(null);
@@ -290,55 +279,144 @@ const Workouts = () => {
     } catch (err) {
       Alert.alert("Error", err.message);
     }
-  };
+  }, [customTitle, customDuration, customDescription, customRoutine, base64Image, editingWorkoutId, workouts]);
 
-  // 🗑️ Delete
-const handleDeleteWorkout = async (workoutId) => {
-  const user = auth.currentUser;
-  if (!user) return Alert.alert("Error", "You must be logged in.");
+  // ✅ Memoized delete workout handler
+  const handleDeleteWorkout = useCallback(async (workoutId) => {
+    const user = auth.currentUser;
+    if (!user) return Alert.alert("Error", "You must be logged in.");
 
-  // Get workout object to display the title in the alert
-  const workout = workouts.find((w) => w.id === workoutId);
-  const workoutTitle = workout?.title ?? "this workout";
+    const workout = workouts.find((w) => w.id === workoutId);
+    const workoutTitle = workout?.title ?? "this workout";
 
-  if (Platform.OS === "web") {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${workoutTitle}"?`
-    );
-    if (!confirmDelete) return;
-
-    try {
+    if (Platform.OS === "web") {
+      if (!window.confirm(`Delete "${workoutTitle}"?`)) return;
       await deleteWorkout(user.uid, workoutId);
-      setWorkouts(workouts.filter((w) => w.id !== workoutId));
-      alert("✅ Workout deleted successfully.");
-    } catch (err) {
-      alert("Error deleting workout: " + err.message);
-    }
-  } else {
-    Alert.alert(
-      "Delete Workout",
-      `Are you sure you want to delete "${workoutTitle}"?`,
-      [
+      setWorkouts((prev) => prev.filter((w) => w.id !== workoutId));
+    } else {
+      Alert.alert("Delete Workout", `Delete "${workoutTitle}"?`, [
         { text: "Cancel", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
           onPress: async () => {
-            try {
-              await deleteWorkout(user.uid, workoutId);
-              setWorkouts(workouts.filter((w) => w.id !== workoutId));
-              Alert.alert("Deleted", "Workout removed successfully.");
-            } catch (err) {
-              Alert.alert("Error", err.message);
-            }
+            await deleteWorkout(user.uid, workoutId);
+            setWorkouts((prev) => prev.filter((w) => w.id !== workoutId));
           },
         },
-      ]
+      ]);
+    }
+  }, [workouts]);
+
+  // ✅ Memoized tabs array
+  const tabs = useMemo(() => {
+    return isLoggedIn ? ["Workouts", "Custom"] : ["Workouts"];
+  }, [isLoggedIn]);
+
+  // ✅ Memoized workout card renderer
+  const renderWorkoutItem = useCallback(({ item }) => {
+    const isExpanded = expandedId === item.id;
+    
+    return (
+      <View style={{ marginBottom: 45 }}>
+        <WorkoutCard
+          title={item.title}
+          duration={item.duration}
+          functionality={item.functionality}
+          image={
+            item.imageBase64
+              ? { uri: `data:image/jpeg;base64,${item.imageBase64}` }
+              : defaultImages[item.id] ?? null
+          }
+          onEdit={() => handleEditWorkout(item)}
+          isLoggedIn={isLoggedIn}
+        />
+
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.primary }]}
+          onPress={() =>
+            router.push({
+              pathname: "/workoutsession",
+              params: {
+                title: item.title,
+                duration: item.duration,
+                routine: item.routine.join("|"),
+              },
+            })
+          }
+        >
+          <Text style={styles.buttonText}>Start Workout</Text>
+        </TouchableOpacity>
+
+        {auth.currentUser && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDeleteWorkout(item.id)}
+          >
+            <Text style={styles.deleteButtonText}>Delete Workout</Text>
+          </TouchableOpacity>
+        )}
+
+        {isExpanded && (
+          <View style={[styles.routineContainer, { backgroundColor: colors.card }]}>
+            <Text style={[styles.routineTitle, { color: colors.primary }]}>
+              Workout Routine
+            </Text>
+            {item.routine.map((r, i) => (
+              <Text
+                key={`${item.id}-${i}`}
+                style={[styles.routineText, { color: colors.textSecondary }]}
+              >
+                • {r}
+              </Text>
+            ))}
+          </View>
+        )}
+      </View>
     );
-  }
-};
+  }, [expandedId, colors, isLoggedIn, handleEditWorkout, handleDeleteWorkout, router]);
 
+  // ✅ Memoized form inputs array for better organization
+  const formInputs = useMemo(() => [
+    {
+      placeholder: "Workout Title",
+      value: customTitle,
+      onChangeText: setCustomTitle,
+    },
+    {
+      placeholder: "Duration (e.g. 30 min)",
+      value: customDuration,
+      onChangeText: setCustomDuration,
+    },
+    {
+      placeholder: "Description",
+      value: customDescription,
+      onChangeText: setCustomDescription,
+    },
+  ], [customTitle, customDuration, customDescription]);
 
+  // ✅ Memoized form styles
+  const formStyles = useMemo(() => ({
+    input: {
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginBottom: 12,
+      borderWidth: 1,
+      color: colors.text,
+      borderColor: colors.border,
+    },
+    routineInput: {
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginBottom: 12,
+      borderWidth: 1,
+      height: 100,
+      color: colors.text,
+      borderColor: colors.border,
+    }
+  }), [colors]);
 
   // ⏳ Loading
   if (loading)
@@ -348,7 +426,6 @@ const handleDeleteWorkout = async (workoutId) => {
       </View>
     );
 
-  // 🧱 UI
   return (
     <SafeAreaView
       style={[
@@ -373,26 +450,26 @@ const handleDeleteWorkout = async (workoutId) => {
 
             {/* Tabs */}
             <View style={[styles.toggleContainer, { backgroundColor: colors.card }]}>
-              {(isLoggedIn ? ["Workouts", "Custom"] : ["Workouts"]).map((tab) => (
-  <TouchableOpacity
-    key={tab}
-    style={[
-      styles.toggleButton,
-      activeTab === tab && [styles.toggleActive, { backgroundColor: colors.primary }],
-    ]}
-    onPress={() => setActiveTab(tab)}
-  >
-    <Text
-      style={[
-        styles.toggleText,
-        { color: colors.text },
-        activeTab === tab && styles.toggleTextActive,
-      ]}
-    >
-      {tab}
-    </Text>
-  </TouchableOpacity>
-))}
+              {tabs.map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  style={[
+                    styles.toggleButton,
+                    activeTab === tab && [styles.toggleActive, { backgroundColor: colors.primary }],
+                  ]}
+                  onPress={() => setActiveTab(tab)}
+                >
+                  <Text
+                    style={[
+                      styles.toggleText,
+                      { color: colors.text },
+                      activeTab === tab && styles.toggleTextActive,
+                    ]}
+                  >
+                    {tab}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
             {/* Workouts List */}
@@ -401,66 +478,7 @@ const handleDeleteWorkout = async (workoutId) => {
                 data={workouts}
                 keyExtractor={(item) => item.id}
                 scrollEnabled={false}
-                renderItem={({ item }) => (
-                  <View style={{ marginBottom: 45 }}>
-                    <WorkoutCard
-                      title={item.title}
-                      duration={item.duration}
-                      functionality={item.functionality}
-                      image={
-  item.imageBase64
-    ? { uri: `data:image/jpeg;base64,${item.imageBase64}` }
-    : defaultImages[item.id] ?? null
-}
-                      onEdit={() => handleEditWorkout(item)}
-                      isLoggedIn={isLoggedIn}
-
-
-                    />
-
-                    <TouchableOpacity
-                      style={[styles.button, { backgroundColor: colors.primary }]}
-                      onPress={() =>
-  router.push({
-    pathname: "/workoutsession",
-    params: {
-      title: item.title,
-      duration: item.duration,
-      routine: item.routine.join("|"),
-    },
-  })
-}
-
-                    >
-                     <Text style={styles.buttonText}>Start Workout</Text>
-                    </TouchableOpacity>
-
-                    {auth.currentUser && (
-  <TouchableOpacity
-    style={styles.deleteButton}
-    onPress={() => handleDeleteWorkout(item.id)}
-  >
-    <Text style={styles.deleteButtonText}>Delete Workout</Text>
-  </TouchableOpacity>
-)}
-
-                    {expandedId === item.id && (
-                      <View style={[styles.routineContainer, { backgroundColor: colors.card }]}>
-                        <Text style={[styles.routineTitle, { color: colors.primary }]}>
-                          Workout Routine
-                        </Text>
-                        {item.routine.map((r, i) => (
-  <Text
-    key={`${item.id}-${i}`}
-    style={[styles.routineText, { color: colors.textSecondary }]}
-  >
-    • {r}
-  </Text>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                )}
+                renderItem={renderWorkoutItem}
               />
             ) : (
               // Custom Form
@@ -469,32 +487,20 @@ const handleDeleteWorkout = async (workoutId) => {
                   {editingWorkoutId ? "Edit Workout" : "Create Custom Workout"}
                 </Text>
 
-                <TextInput
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                  placeholder="Workout Title"
-                  placeholderTextColor={colors.textSecondary}
-                  value={customTitle}
-                  onChangeText={setCustomTitle}
-                />
+                {/* Form Inputs */}
+                {formInputs.map((input, index) => (
+                  <TextInput
+                    key={index}
+                    style={formStyles.input}
+                    placeholder={input.placeholder}
+                    placeholderTextColor={colors.textSecondary}
+                    value={input.value}
+                    onChangeText={input.onChangeText}
+                  />
+                ))}
 
                 <TextInput
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                  placeholder="Duration (e.g. 30 min)"
-                  placeholderTextColor={colors.textSecondary}
-                  value={customDuration}
-                  onChangeText={setCustomDuration}
-                />
-
-                <TextInput
-                  style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-                  placeholder="Description"
-                  placeholderTextColor={colors.textSecondary}
-                  value={customDescription}
-                  onChangeText={setCustomDescription}
-                />
-
-                <TextInput
-                  style={[styles.input, { height: 100, color: colors.text, borderColor: colors.border }]}
+                  style={formStyles.routineInput}
                   placeholder="Workout Routine (one exercise per line)"
                   placeholderTextColor={colors.textSecondary}
                   value={customRoutine}
@@ -559,13 +565,6 @@ const styles = StyleSheet.create({
   routineText: { fontSize: 14, marginVertical: 2, marginLeft: 4 },
   customContainer: { borderRadius: 12, padding: 16, marginTop: 10 },
   customTitle: { fontSize: 18, fontWeight: "800", marginBottom: 10, textAlign: "center" },
-  input: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 12,
-    borderWidth: 1,
-  },
   addButton: { paddingVertical: 12, borderRadius: 10, alignItems: "center" },
   addButtonText: { color: "#000", fontWeight: "700", fontSize: 16 },
   uploadButton: { borderRadius: 8, paddingVertical: 10, alignItems: "center", marginBottom: 8 },
