@@ -10,7 +10,7 @@
     "test": "jest --watchAll",
     "test:ci": "jest"
   },
-    "jest": {
+  "jest": {
     "preset": "jest-expo"
   },
   "dependencies": {
