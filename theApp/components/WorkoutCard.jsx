@@ -24,9 +24,7 @@ const WorkoutCard = ({ title, duration, functionality, image, onEdit, isLoggedIn
   );
 };
 
-/**
- * ✅ React.memo parandalon re-render nëse props nuk ndryshojnë
- */
+
 export default React.memo(WorkoutCard);
 
 const styles = StyleSheet.create({

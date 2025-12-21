@@ -16,13 +16,14 @@ and customize their personal fitness profile – all inside a clean and intuitiv
 
 ---
 
-## 📌 Features
+## 1. Functional Scope
 
 ### 🏋️ Workout Management
 - Predefined workouts  
 - Add / Edit / Delete custom workouts  
 - Workout session mode with timers and checklists  
 - Local images + Base64 support for uploaded images  
+- Firestore persistence
 
 ### 🍎 Nutrition
 - Weight Loss plan  
@@ -52,6 +53,26 @@ and customize their personal fitness profile – all inside a clean and intuitiv
 - Dynamic routes  
 
 ---
+## 2.Device Features
+
+### Image Picker
+- Implemented using expo-image-picker 
+- Allows selection of images from device gallery  
+- Images are compressed before storage 
+- Local images + Base64 support for uploaded images  
+- Firestore persistence
+
+### 🍎 Nutrition
+- Weight Loss plan  
+- Muscle Gain plan  
+- Daily Energy plan  
+- Nutrition list with details  
+
+### ⚖️ BMI Calculation
+- BMI formula  
+- Health category interpretation  
+- BmiResult component for clean output  
+
 
 ## 🚀 Technologies Used
 
