@@ -222,9 +222,9 @@ Testing is performed using Jest and @testing-library/react-native.
 <!-- SECOND ROW: OTHER SCREENS -->
 <p align="center">
   <img src="./assets/workoutPage.jpg" width="220" alt="Workouts Screen" />
-  <img src="./assets/nutritions.jpg" width="220" alt="BMI Screen" />
+  <img src="./assets/nutritions.jpg" width="220" alt="Nutrition Screen" />
   <img src="./assets/profile.jpg" width="220" alt="Profile Screen" />
-  <img src="./assets/signin.jpg" width="220" alt="Profile Screen" />
+  <img src="./assets/signin.jpg" width="220" alt="Sign In Screen" />
 </p>
 ---
 ## 🛠️ **Installation Guide**
