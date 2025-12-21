@@ -213,20 +213,21 @@ Testing is performed using Jest and @testing-library/react-native.
 
 ## 📸 App Screenshots
 
-<!-- FIRST ROW: DARK / LIGHT HOME -->
-<p align="center">
-  <img src="./assets/index.jpg" width="260" alt="Home Dark Mode" />
-  <img src="./assets/lightindex.jpg" width="260" alt="Home Light Mode" />
-</p>
+### 🏠 Home Screens - Dark & Light Mode
+<div align="center" style="margin-bottom: 40px;">
+  <img src="theApp/assets/index.jpg" width="280" alt="Home Dark Mode" style="margin-right: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"/>
+  <img src="theApp/assets/lightindex.jpg" width="280" alt="Home Light Mode" style="border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"/>
+</div>
 
-<!-- SECOND ROW: OTHER SCREENS -->
-<p align="center">
-  <img src="./assets/workoutPage.jpg" width="220" alt="Workouts Screen" />
-  <img src="./assets/nutritions.jpg" width="220" alt="Nutrition Screen" />
-  <img src="./assets/profile.jpg" width="220" alt="Profile Screen" />
-  <img src="./assets/signin.jpg" width="220" alt="Sign In Screen" />
-</p>
+### 📱 Other Screens
+<div align="center">
+  <img src="theApp/assets/workoutPage.jpg" width="220" alt="Workouts Screen" style="margin-right: 25px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.15);"/>
+  <img src="theApp/assets/nutritions.jpg" width="220" alt="Nutrition Screen" style="margin-right: 25px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.15);"/>
+  <img src="theApp/assets/profile.jpg" width="220" alt="Profile Screen" style="margin-right: 25px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.15);"/>
+  <img src="theApp/assets/signin.jpg" width="220" alt="Sign In Screen" style="border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.15);"/>
+</div>
 ---
+
 ## 🛠️ **Installation Guide**
 
 Follow these steps to run the project from zero.
