@@ -15,12 +15,13 @@ and customize their personal fitness profile – all inside a clean and intuitiv
 - **Enes Spahiu**
 
 ---
+# 📌 Core Features
 
 ## 1. Functional Scope
 
 ### 🏋️ Workout Management
 - Predefined workouts  
-- Add / Edit / Delete custom workouts  
+- Create / Read / Update / Delete (`CRUD`) custom workouts using Firebase Firestore
 - Workout session mode with timers and checklists  
 - Local images + Base64 support for uploaded images  
 - Firestore persistence
@@ -37,71 +38,128 @@ and customize their personal fitness profile – all inside a clean and intuitiv
 - BmiResult component for clean output  
 
 ### 👤 User Account System
-- Firebase Authentication  
+- Firebase Authentication
+- Multiple authentication methods:
+     - Email & Password
+     - Google Authentication Provider 
 - Signup / Login  
 - Change Password  
 - Edit Profile (Photo, Name, Height, Weight)  
 - Real-time updates using **Firestore `onSnapshot()`**
 
+### 👤 Data Management
+- Firestore used as primary database
+- CRUD operations implemented
+- State management using:
+        - `useState` for data storage
+        - `useEffect` for lifecycle and Firestore subscriptions
+- Explicit handling of:
+        - Loading states
+        - Success states
+        - Error states
+- Modular service layer (`services/`) to seperate business logic from UI
+
 ### 🌙 Theme System
 - Dark / Light mode  
 - Handled via global **ThemeContext**
 
-### ▶️ Navigation
-- Expo Router  
-- Layout file  
-- Dynamic routes  
+### ▶️ Navigation & Routing
+- Navigation implemented using Expo Router 
+- File-based routing architecture 
+- Central layout management using `_layout.jsx`
+- Support for:
+        - Public routes (login, signup)
+        - Protected routes (authenticated user screens)
+  - Programmatic navigation `using useRouter()`
+  - Dynamic routing for workout sessions and detail screens
 
 ---
-## 2.Device Features
+
+## 2. Device Features
 
 ### Image Picker
-- Implemented using expo-image-picker 
+- Implemented using `expo-image-picker` 
 - Allows selection of images from device gallery  
 - Images are compressed before storage 
 - Local images + Base64 support for uploaded images  
 - Firestore persistence
 
-### 🍎 Nutrition
-- Weight Loss plan  
-- Muscle Gain plan  
-- Daily Energy plan  
-- Nutrition list with details  
+### Local Notifications
+- Implemented using `expo-notifications`
+- Used for reminders and user feedback
+- Requires development build (not Expo Go)
 
-### ⚖️ BMI Calculation
-- BMI formula  
-- Health category interpretation  
-- BmiResult component for clean output  
+### Location Support (Extensible)
+- Project structure supports integration with `expo-location` or Google Maps APIs 
 
+---
 
-## 🚀 Technologies Used
+## 3. UI/UX
 
-### **Core**
-- React Native  
-- Expo  
-- Expo Router  
-- JavaScript (ES6+)  
+### Layout
+- Consistent spacing, padding, and alignment
+- Unified color system via ThemeContext
+- Responsive design for Android and iOS
 
-### **Firebase**
-- Firebase Auth  
-- Firestore  
-- Real-time listeners (onSnapshot)  
+### Animations
+- `TouchableOpacity` for press feedback
+- `Animated` API for:
+     - Fade-in / fade-out effects
+     - Scale animations on state change
+     - UI feedback on plan selection and transitions
+  
+---
 
-### **UI**
-- LinearGradient  
-- ScrollView  
-- SafeAreaView  
-- TouchableOpacity  
-- FlatList  
+## 4. Performance & optimization
 
-### **Helpers**
-- Base64 image picker  
-- Expo ImagePicker  
-- Custom Theme Context  
+### List Rendering
+- `FlatList` used for efficient list virtualization
+
+### React Memoization
+- `useCallback` for stable function references
+- `useMemo` for caching computed values
+
+### Component Memoization
+- `React.memo` for static or rarely-changing components 
+
+### Asset Optimization
+- Image compression during upload
+- Conditional rendering of media
+- Static asset caching via `require()`
+- Prevention of oversized assets to ensure performance stability
+
+---
+
+## 5. Testing
+All tests are located in the `__tests__` directory.
+
+### Snapshot Testing
+- Component rendering verification
+- Snapshot persistence for regression detection
+
+### Interaction Testing
+- Button press events
+- Input validation logic
+- Form submission flows
+- Navigation triggers
+
+### Mocking
+- Firebase services
+- Authentication logic
+- Expo Router
+- Context providers
+- Native modules
+
+Testing is performed using Jest and @testing-library/react-native.
 
 ---
 
 ### 📁 **Project Structure**
+- **__tests__/**
+  - `bmi.snapshot.test.js`
+  - `login.interaction.test.js`
+  - `signup.test.js`
+    
 - **app/**
   - `_layout.jsx`
   - `index.jsx`
