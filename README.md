@@ -211,6 +211,22 @@ Testing is performed using Jest and @testing-library/react-native.
 
 ---
 
+## 📸 App Screenshots
+
+<!-- FIRST ROW: DARK / LIGHT HOME -->
+<p align="center">
+  <img src="assets/index.jpg" width="260" alt="Home Dark Mode" />
+  <img src="assets/lightindex.jpg" width="260" alt="Home Light Mode" />
+</p>
+
+<!-- SECOND ROW: OTHER SCREENS -->
+<p align="center">
+  <img src="assets/workoutPage.jpg" width="220" alt="Workouts Screen" />
+  <img src="assets/nutritions.jpg" width="220" alt="BMI Screen" />
+  <img src="assets/profile.jpg" width="220" alt="Profile Screen" />
+  <img src="assets/signin.jpg" width="220" alt="Profile Screen" />
+</p>
+---
 ## 🛠️ **Installation Guide**
 
 Follow these steps to run the project from zero.
